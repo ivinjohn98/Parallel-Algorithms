@@ -14,7 +14,7 @@ int main() {
   std::vector<int> my_tmp(data.size(),0);
 
   //
-  // Sequential algorithm
+  // Sequential algorithm O( n * lg(n) )
   for (size_t outer = 0; outer < std::log2(my_prefix_sum.size()); ++outer) {
     for (size_t i = 0; i < my_prefix_sum.size(); ++i) {
       if (i < (1 << outer)) { // (1 << outer) is 2^outer
@@ -29,7 +29,7 @@ int main() {
   }
 
   //
-  // Verification with known sequential algorithm
+  // Verification with known sequential algorithm O(N)
   std::partial_sum(stl_partial_sum.begin(), stl_partial_sum.end(), stl_partial_sum.begin());
 
   for (int v : data) {
