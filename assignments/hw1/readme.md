@@ -1,5 +1,7 @@
 # CSCE 626 -- Homework 1  
 
+## Due Sunday Feb 9th by midnight.
+
 ## Objectives
 * Implement a O(lg(P) + N/P) version of Prefix Sum in OpenMP
 * Using the O(log(N) * N/P) version we implemented in class (see code_examples directory), setup an experimental comparison between the two versions and also the sequential std::partial_sum
