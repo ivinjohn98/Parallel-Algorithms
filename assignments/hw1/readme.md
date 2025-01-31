@@ -13,6 +13,7 @@
 * 50pts for a correct O(lg(P) + N/P) implementation of Prefix Sum in OpenMP 
 * 25pts for your report on your Weak Scaling study
 * 25pts for your report on your Strong Scaling study
+* If you're inspired to experiment with other variations, please do so!    These are just the basic requirements for the assignment.
 
 
 
@@ -23,4 +24,4 @@
 
 
 ## Student Report
-*  write your report here and add any images to this directory 
+*  Write your report here and add any images to this directory 
