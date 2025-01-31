@@ -20,7 +20,7 @@
 
 
 ## Submission Instructions
-* Fork this repository, it should default to private (double check), and then manually add me (rogerpearce) and our TA()
+* Fork this repository, it should default to private (double check), and then manually add me (rogerpearce) and our TA(krishnanprash)
 * Commit and push your code into this directory of your fork
 * Commit and push your report and figures to this file and directory
 
