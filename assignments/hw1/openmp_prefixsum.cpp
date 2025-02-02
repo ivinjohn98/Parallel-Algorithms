@@ -4,9 +4,9 @@
 #include <numeric> // for std::partial_sum
 #include <omp.h>
 
-int main()
+int main(int argc, char* argv[])
 {
-  size_t N = 50;
+  size_t N = std::stoi(argv[1]);
   std::unique_ptr<int[]> data = std::make_unique<int[]>(N);
   std::unique_ptr<int[]> prefix_sum = std::make_unique<int[]>(N);
 
@@ -23,11 +23,13 @@ int main()
   {
     P = omp_get_num_threads();
   }
+
   std::unique_ptr<int[]> block_sums = std::make_unique<int[]>(P);
   std::unique_ptr<int[]> block_sums_tmp = std::make_unique<int[]>(P);
 
   // Step 1: O(N/P) algorithm
-#pragma omp parallel num_threads(P)
+  double start_time = omp_get_wtime(); // start timer
+#pragma omp parallel
   {
     size_t tid = omp_get_thread_num();
     size_t chunk_size = (N + P - 1) / P; // Divide N among P threads
@@ -49,7 +51,7 @@ int main()
   for (size_t outer = 0; outer < std::log2(P); ++outer)
   {
 #pragma omp parallel for
-    for (size_t i = 0; i < N; ++i)
+    for (size_t i = 0; i < P; ++i)
     {
       if (i < (1 << outer))
       { // (1 << outer) is 2^outer
@@ -80,11 +82,17 @@ int main()
       }
     }
   }
+  double end_time = omp_get_wtime();
+
+  // printing the time elapsed
+  std::cout << "Number of elements (N) = " << N << std::endl;
+  std::cout << "Number of Threads (P) = " << P << std::endl;
+  std::cout << "Elapsed time (t)= " << end_time - start_time << std::endl;
 
   // Printing the result
-  for (size_t i = 0; i < N; ++i)
-  {
-    std::cout << prefix_sum[i] << " ";
-  }
-  std::cout << std::endl;
+  //  for (size_t i = 0; i < N; ++i)
+  //  {
+  //    std::cout << prefix_sum[i] << " ";
+  //  }
+  //  std::cout << std::endl;
 }
