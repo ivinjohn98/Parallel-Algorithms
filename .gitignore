@@ -38,3 +38,5 @@ code_examples/openmp_ex2
 code_examples/openmp_ex3
 code_examples/openmp_prefixsum
 code_examples/sequential_prefixsum
+code_examples/openmp_scaling_example
+code_examples/mpi_broadcast
