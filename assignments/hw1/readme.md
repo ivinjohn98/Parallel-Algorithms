@@ -41,9 +41,13 @@ $ python weak_scaling.py
 
 Weak scaling measures how the solution time changes when the problem size increases in proportion to the number of processing units. Ideally, the execution time should remain constant if the computation scales perfectly in parallel algorithms.
 
-- **O((N/P)log(P))**: Shows a gradual increase from `6.82906` to `11.9331` as the number of processors increases. Overall it shows an increasing trend even though parallelism exists. This could be due to communication or overhead cost grow with processors. 
-- **O(N/P + log(P))**: Remains relatively stable. Small change observed from `0.290359` to `0.570947`. This algorithm demonstrates efficient use of parallelism with minimal overhead.
+- **O((N/P)log(P))** algorithm: Shows a gradual increase from `6.82906` to `11.9331` as the number of processors increases. Overall it shows an increasing trend even though parallelism exists. This could be due to communication or overhead cost grow with processors. 
+- **O(N/P + log(P))** algorithm: Remains relatively stable. Small change observed from `0.290359` to `0.570947`. This algorithm demonstrates efficient use of parallelism with minimal overhead.
 - **O(N)**: Demonstrates a linear growth from `0.291574` to `4.66478`. This is expected as we are only using one processor for the computation.
+
+I also performed weak scaling with `std::partial_sum`, and its performance was comparable to the \( O(N/P + \log(P)) \) algorithm. I believe this could be due to better cache-efficient memory access and compiler optimizations, which may involve parallelism. Results are as shown below.
+
+![Weak Scaling](weak_scaling.png)
 
 ### Strong Scaling Study
 
@@ -61,6 +65,10 @@ $ python strong_scaling.py
 
 Strong scaling measures how the solution time changes when the number of processors increases while keeping the problem size constant, in this case 100 million as N. Ideally, the execution time should decrease proportionally as the number of processors increases in parallel algorithms.
 
-- **O((N/P)log(P))** time factor decreases significantly from `77.3024` to `7.10456` showing strong scaling behavior.
-- **O(N/P + log(P))** time factor decreases from `2.91073` to `0.355883` showing strong scaling behavior.
-- **O(N)** remains nearly constant, fluctuating slightly around `2.916` which indicates that the algorithm does not benefit from additional processors as it is a sequential algorithm.
+- **O((N/P)log(P))** algorithm: time factor decreases significantly from `77.3024` to `7.10456` showing strong scaling behavior.
+- **O(N/P + log(P))** algorithm: time factor decreases from `2.91073` to `0.355883` showing strong scaling behavior.
+- **O(N)** algorithm: remains nearly constant, fluctuating slightly around `2.916` which indicates that the algorithm does not benefit from additional processors as it is a sequential algorithm.
+
+I also performed strong scaling with `std::partial_sum`, and its performance was better compared to parallel algorithms. I believe this could be due to better cache-efficient memory access and compiler optimizations, which may involve parallelism. Results are as shown below.
+
+![Strong Scaling](strong_scaling.png)
