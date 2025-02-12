@@ -7,10 +7,11 @@
 int world_rank = -1;
 int world_size = -1;
 void print_in_order(const std::vector<int>& local_data) {
-
+  // Assume local_data.size() could be different on each rank.
   int ps_send = local_data.size();
   int ps_recv = 0;
 
+  // MPI provided function for Prefix Sum.
   MPI_Exscan(&ps_send, &ps_recv, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
 
   //std::cout << "PS: " << world_rank << " " << ps_recv << std::endl;
@@ -18,7 +19,7 @@ void print_in_order(const std::vector<int>& local_data) {
   for(int token = 0;  token < world_size; ++token) {
     if(token == world_rank){
       for(size_t i = 0; i < local_data.size(); ++i) {
-        std::cout << world_rank << ": " << ps_recv + i 
+        std::cout << world_rank << ": index " << ps_recv + i 
                   << " = " << local_data[i] << std::endl;
       }
     }
