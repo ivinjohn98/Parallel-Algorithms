@@ -14,7 +14,7 @@ int main(int argc, char **argv)
   int world_size;
   MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
-  int data = std::rand();
+  int data = rank;
   int data_lchild = -1;
   int data_rchild = -1;
 
