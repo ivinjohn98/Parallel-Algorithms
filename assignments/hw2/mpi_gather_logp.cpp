@@ -47,7 +47,7 @@ int main(int argc, char **argv)
   {
     int gathered_size = data_gattered.size();
     MPI_Send(&gathered_size, 1, MPI_INT, parent, 0, MPI_COMM_WORLD);
-    MPI_Send(data_gattered.data(), gathered_size, MPI_INT, parent, 1, MPI_COMM_WORLD);
+    MPI_Send(data_gattered.data(), gathered_size, MPI_INT, parent, 0, MPI_COMM_WORLD);
   }
   else
   {
