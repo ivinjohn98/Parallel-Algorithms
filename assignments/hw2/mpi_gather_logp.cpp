@@ -24,6 +24,7 @@ int main(int argc, char **argv)
 
   std::vector<int> recv_buffer;
 
+  double start_time = MPI_Wtime(); // start time
   if (lchild < world_size)
   {
     int lsize;
@@ -50,12 +51,16 @@ int main(int argc, char **argv)
   }
   else
   {
-    std::cout << "Rank 0 gathered data: ";
-    for (int num : data_gattered)
-    {
-      std::cout << num << " ";
-    }
-    std::cout << std::endl;
+    double end_time = MPI_Wtime(); // end time
+    std::cout << "Number of elements (N) = " << world_size << std::endl;
+    std::cout << "Number of Threads (P) = " << world_size << std::endl;
+    std::cout << "Elapsed time (t) = " << end_time - start_time << std::endl;
+    // std::cout << "Rank 0 gathered data: ";
+    // for (int num : data_gattered)
+    // {
+    //   std::cout << num << " ";
+    // }
+    // std::cout << std::endl;
   }
 
   // Finalize MPI

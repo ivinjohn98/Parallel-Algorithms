@@ -23,6 +23,8 @@ int main(int argc, char **argv)
   int rchild = 2 * rank + 2;
 
   int data_max = data;
+
+  double start_time = MPI_Wtime(); // start time
   if (lchild < world_size)
   {
     MPI_Recv(&data_lchild, 1, MPI_INT, lchild, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
@@ -45,7 +47,12 @@ int main(int argc, char **argv)
     MPI_Send(&data_max, 1, MPI_INT, parent, 0, MPI_COMM_WORLD);
   }
 
-  std::cout << "Rank " << rank << " data = " << data << " data max = " << data_max << std::endl;
+  double end_time = MPI_Wtime(); // end time
+  std::cout << "Number of elements (N) = " << world_size << std::endl;
+  std::cout << "Number of Threads (P) = " << world_size << std::endl;
+  std::cout << "Elapsed time (t) = " << end_time - start_time << std::endl;
+
+  // std::cout << "Rank " << rank << " data = " << data << " data max = " << data_max << std::endl;
 
   // Finalize MPI
   MPI_Finalize();
