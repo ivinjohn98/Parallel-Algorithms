@@ -20,18 +20,8 @@ int main(int argc, char **argv)
     data = 42;
   }
 
-  int parent = 0;
-
   double start_time = MPI_Wtime(); // start time
-  if (rank != 0)
-  {
-    MPI_Recv(&data, 1, MPI_INT, parent, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-  }
-  else
-  {
-    for (int child = 1; child < world_size; child++)
-      MPI_Send(&data, 1, MPI_INT, child, 0, MPI_COMM_WORLD);
-  }
+  MPI_Bcast(&data, 1, MPI_INT, 0, MPI_COMM_WORLD);
   double end_time = MPI_Wtime(); // end time
 
   if (rank == 0)

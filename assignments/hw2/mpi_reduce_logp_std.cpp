@@ -14,34 +14,21 @@ int main(int argc, char **argv)
   int world_size;
   MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
-  int data = -1;
-  if (rank == 0)
-  {
-    data = 42;
-  }
-
-  int parent = 0;
+  int data = rank;
+  int data_max;
 
   double start_time = MPI_Wtime(); // start time
-  if (rank != 0)
-  {
-    MPI_Recv(&data, 1, MPI_INT, parent, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-  }
-  else
-  {
-    for (int child = 1; child < world_size; child++)
-      MPI_Send(&data, 1, MPI_INT, child, 0, MPI_COMM_WORLD);
-  }
+  MPI_Reduce(&data, &data_max, 1, MPI_INT, MPI_MAX, 0, MPI_COMM_WORLD);
   double end_time = MPI_Wtime(); // end time
-
+  // if (rank == 0) {
+  //   std::cout << "Rank " << rank << " data = " << data << " data max = " << data_max << std::endl;
+  // }
   if (rank == 0)
   {
     std::cout << "Number of elements (N) = " << world_size << std::endl;
     std::cout << "Number of Threads (P) = " << world_size << std::endl;
     std::cout << "Elapsed time (t) = " << end_time - start_time << std::endl;
   }
-
-  // std::cout << "Rank " << rank << " data = " << data << std::endl;
 
   // Finalize MPI
   MPI_Finalize();

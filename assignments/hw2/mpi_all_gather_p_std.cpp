@@ -16,38 +16,25 @@ int main(int argc, char **argv)
   MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
   int data = rank;
-  std::vector<int> data_gattered;
+  std::vector<int> data_gathered(world_size);
 
-  int nextP = (rank + 1) % world_size;
-  int prevP = (rank - 1 + world_size) % world_size;
+  double start_time = MPI_Wtime();
+  MPI_Allgather(&data, 1, MPI_INT, data_gathered.data(), 1, MPI_INT, MPI_COMM_WORLD);
+  double end_time = MPI_Wtime();
 
-  int next_data_to_send = data;
-  int recv_buffer;
-
-  double start_time = MPI_Wtime(); // start time
-
-  data_gattered.push_back(data);
-
-  for (size_t i = 0; i < world_size - 1; ++i)
-  { // P-1 iterations
-    MPI_Send(&next_data_to_send, 1, MPI_INT, nextP, 0, MPI_COMM_WORLD);
-    MPI_Recv(&recv_buffer, 1, MPI_INT, prevP, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-    data_gattered.push_back(recv_buffer);
-    next_data_to_send = recv_buffer;
-  }
-  if (rank == 2)
+  // if (rank == 2) {
+  //   std::cout << "Rank 2 gathered data: ";
+  //   for (int num : data_gathered)
+  //   {
+  //     std::cout << num << " ";
+  //   }
+  //   std::cout << std::endl;
+  // }
+  if (rank == 0)
   {
-    double end_time = MPI_Wtime(); // end time
     std::cout << "Number of elements (N) = " << world_size << std::endl;
     std::cout << "Number of Threads (P) = " << world_size << std::endl;
     std::cout << "Elapsed time (t) = " << end_time - start_time << std::endl;
-
-    // std::cout << "Rank 0 gathered data: ";
-    // for (int num : data_gattered)
-    // {
-    //   std::cout << num << " ";
-    // }
-    // std::cout << std::endl;
   }
 
   // Finalize MPI

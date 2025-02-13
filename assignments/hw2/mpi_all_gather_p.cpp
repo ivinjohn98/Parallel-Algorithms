@@ -25,7 +25,6 @@ int main(int argc, char **argv)
   int recv_buffer;
 
   double start_time = MPI_Wtime(); // start time
-
   data_gattered.push_back(data);
 
   for (size_t i = 0; i < world_size - 1; ++i)
@@ -35,9 +34,10 @@ int main(int argc, char **argv)
     data_gattered.push_back(recv_buffer);
     next_data_to_send = recv_buffer;
   }
-  if (rank == 2)
+  double end_time = MPI_Wtime(); // end time
+
+  if (rank == 0)
   {
-    double end_time = MPI_Wtime(); // end time
     std::cout << "Number of elements (N) = " << world_size << std::endl;
     std::cout << "Number of Threads (P) = " << world_size << std::endl;
     std::cout << "Elapsed time (t) = " << end_time - start_time << std::endl;

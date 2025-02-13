@@ -1,5 +1,6 @@
 #include <iostream>
 #include <mpi.h>
+#include <vector>
 
 int main(int argc, char **argv)
 {
@@ -14,34 +15,32 @@ int main(int argc, char **argv)
   int world_size;
   MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
-  int data = -1;
+  int data = rank;
+  std::vector<int> data_gathered;
+
   if (rank == 0)
   {
-    data = 42;
+    data_gathered.resize(world_size);
   }
-
-  int parent = 0;
 
   double start_time = MPI_Wtime(); // start time
-  if (rank != 0)
-  {
-    MPI_Recv(&data, 1, MPI_INT, parent, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-  }
-  else
-  {
-    for (int child = 1; child < world_size; child++)
-      MPI_Send(&data, 1, MPI_INT, child, 0, MPI_COMM_WORLD);
-  }
+  MPI_Gather(&data, 1, MPI_INT, data_gathered.data(), 1, MPI_INT, 0, MPI_COMM_WORLD);
   double end_time = MPI_Wtime(); // end time
 
+  // if (rank == 0) {
+  //   std::cout << "Rank 0 gathered data: ";
+  //   for (int num : data_gathered)
+  //   {
+  //     std::cout << num << " ";
+  //   }
+  //   std::cout << std::endl;
+  // }
   if (rank == 0)
   {
     std::cout << "Number of elements (N) = " << world_size << std::endl;
     std::cout << "Number of Threads (P) = " << world_size << std::endl;
     std::cout << "Elapsed time (t) = " << end_time - start_time << std::endl;
   }
-
-  // std::cout << "Rank " << rank << " data = " << data << std::endl;
 
   // Finalize MPI
   MPI_Finalize();
