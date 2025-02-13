@@ -23,15 +23,19 @@ int main(int argc, char **argv)
   int rchild = 2 * rank + 2;
 
   int data_max = data;
-  if (lchild < world_size) {
+  if (lchild < world_size)
+  {
     MPI_Recv(&data_lchild, 1, MPI_INT, lchild, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-    if (data_lchild > data_max) {
+    if (data_lchild > data_max)
+    {
       data_max = data_lchild;
     }
   }
-  if (rchild < world_size) {
+  if (rchild < world_size)
+  {
     MPI_Recv(&data_rchild, 1, MPI_INT, rchild, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-    if (data_rchild > data_max) {
+    if (data_rchild > data_max)
+    {
       data_max = data_rchild;
     }
   }

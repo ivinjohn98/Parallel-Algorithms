@@ -24,7 +24,7 @@ int main(int argc, char **argv)
   int rchild = 2 * rank + 2;
 
   std::vector<int> recv_buffer;
-  
+
   if (lchild < world_size)
   {
     int lsize;

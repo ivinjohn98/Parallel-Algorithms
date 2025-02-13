@@ -1,7 +1,8 @@
 #include <iostream>
 #include <mpi.h>
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
   // Initialize MPI
   MPI_Init(&argc, &argv);
 
@@ -14,7 +15,8 @@ int main(int argc, char **argv) {
   MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
   int data = -1;
-  if (rank == 0) {
+  if (rank == 0)
+  {
     data = 42;
   }
 
@@ -22,14 +24,17 @@ int main(int argc, char **argv) {
   int lchild = 2 * rank + 1;
   int rchild = 2 * rank + 2;
 
-  if (rank != 0) {
+  if (rank != 0)
+  {
     MPI_Recv(&data, 1, MPI_INT, parent, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
   }
 
-  if (lchild < world_size) {
+  if (lchild < world_size)
+  {
     MPI_Send(&data, 1, MPI_INT, lchild, 0, MPI_COMM_WORLD);
   }
-  if (rchild < world_size) {
+  if (rchild < world_size)
+  {
     MPI_Send(&data, 1, MPI_INT, rchild, 0, MPI_COMM_WORLD);
   }
 
