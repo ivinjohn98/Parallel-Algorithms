@@ -17,7 +17,6 @@ int main(int argc, char **argv)
 
   int data = rank;
   std::vector<int> data_gattered;
-  data_gattered.push_back(data);
 
   int parent = (rank - 1) / 2;
   int lchild = 2 * rank + 1;
