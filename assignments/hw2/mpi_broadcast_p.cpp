@@ -18,13 +18,13 @@ int main(int argc, char **argv) {
     data = 42;
   }
 
-  int parent = (rank - 1) / 2;
-  int child = 2 * rank + 1;
+  int parent = 0;
 
   if (rank != 0) {
     MPI_Recv(&data, 1, MPI_INT, parent, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
   } else {
-    MPI_Send(&data, 1, MPI_INT, child, 0, MPI_COMM_WORLD);
+    for (int child = 1; child < world_size; child++)
+      MPI_Send(&data, 1, MPI_INT, child, 0, MPI_COMM_WORLD);
   }
 
   std::cout << "Rank " << rank << " data = " << data << std::endl;
