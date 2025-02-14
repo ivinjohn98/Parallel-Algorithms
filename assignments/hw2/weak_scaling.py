@@ -20,7 +20,7 @@ for executables in executables_list:
         for P, E in zip(thread_counts, element_counts):
             result = subprocess.run(
                 ["mpirun", "-np", str(P), exe],
-                capture_output=True, text=True
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True
             )
             for line in result.stdout.splitlines():
                 if "Elapsed time (t) =" in line:
@@ -29,6 +29,7 @@ for executables in executables_list:
                     break
 
     print(execution_times)
+    
 
     log_thread_counts = np.log2(thread_counts)
 
