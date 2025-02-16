@@ -50,9 +50,12 @@ int main(int argc, char **argv)
     MPI_Send(&gathered_size, 1, MPI_INT, parent, 0, MPI_COMM_WORLD);
     MPI_Send(data_gattered.data(), gathered_size, MPI_INT, parent, 0, MPI_COMM_WORLD);
   }
-  else
+
+  MPI_Barrier(MPI_COMM_WORLD);
+  
+  if (rank == 0)
   {
-    MPI_Barrier(MPI_COMM_WORLD);
+    
     double end_time = MPI_Wtime(); // end time
     std::cout << "Number of elements (N) = " << world_size << std::endl;
     std::cout << "Number of Threads (P) = " << world_size << std::endl;
