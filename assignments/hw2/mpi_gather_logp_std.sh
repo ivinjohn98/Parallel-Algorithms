@@ -1,0 +1,24 @@
+#!/bin/bash
+#SBATCH --export=NONE
+#SBATCH --get-user-env=L
+
+##NECESSARY JOB SPECIFICATIONS
+#SBATCH --job-name=job_mpi_gather_logp_std       #Set the job name to "JobExample2"
+#SBATCH --time=0:30:00               #Set the wall clock limit to 6hr and 30min
+#SBATCH --nodes=1                    #Request 1 node
+#SBATCH --ntasks-per-node=48          #Request 8 tasks/cores per node
+#SBATCH --mem=32G                     #Request 8GB per node 
+#SBATCH --output=output_mpi_gather_logp_std.%j      #Send stdout/err to "Example2Out.[jobID]"
+
+##First Executable Line
+module load GCC OpenMPI
+#
+
+mpirun -np 1 ./mpi_gather_logp_std
+mpirun -np 2 ./mpi_gather_logp_std
+mpirun -np 4 ./mpi_gather_logp_std
+mpirun -np 8 ./mpi_gather_logp_std
+mpirun -np 16 ./mpi_gather_logp_std
+mpirun -np 32 ./mpi_gather_logp_std
+mpirun -np 48 ./mpi_gather_logp_std
+#
