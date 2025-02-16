@@ -12,8 +12,8 @@ output_filename = "execution_times.txt"
 with open(output_filename, "w") as f:
     for executables in executables_list:
 
-        thread_counts = [1, 2, 3, 4, 5, 6, 7, 8]
-        element_counts = [1, 2, 3, 4, 5, 6, 7, 8]
+        thread_counts = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+        element_counts = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
         
         execution_times = {key: [] for key in executables.keys()}
         for label, exe in executables.items():
