@@ -1,0 +1,35 @@
+Number of elements (N) = 1
+Number of Threads (P) = 1
+Elapsed time (t) = 3.7477e-05
+Number of elements (N) = 2
+Number of Threads (P) = 2
+Elapsed time (t) = 2.7682e-05
+Number of elements (N) = 4
+Number of Threads (P) = 4
+Elapsed time (t) = 6.0519e-05
+Number of elements (N) = 8
+Number of Threads (P) = 8
+Elapsed time (t) = 0.000115719
+Number of elements (N) = 12
+Number of Threads (P) = 12
+Elapsed time (t) = 9.7221e-05
+Number of elements (N) = 16
+Number of Threads (P) = 16
+Elapsed time (t) = 0.000107479
+Number of elements (N) = 20
+Number of Threads (P) = 20
+Elapsed time (t) = 0.00013721
+Number of elements (N) = 26
+Number of Threads (P) = 26
+Elapsed time (t) = 0.000158176
+Number of elements (N) = 32
+Number of Threads (P) = 32
+Elapsed time (t) = 0.000402566
+Number of elements (N) = 40
+Number of Threads (P) = 40
+Elapsed time (t) = 0.00263906
+Number of elements (N) = 48
+Number of Threads (P) = 48
+Elapsed time (t) = 0.0081327
+
+[3.7477e-05, 2.7682e-05, 6.0519e-05, 0.000115719, 9.7221e-05, 0.000107479, 0.00013721, 0.000158176, 0.000402566, 0.00263906, 0.0081327]
