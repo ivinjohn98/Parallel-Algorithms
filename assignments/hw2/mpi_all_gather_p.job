@@ -18,7 +18,11 @@ mpirun -np 1 ./mpi_all_gather_p
 mpirun -np 2 ./mpi_all_gather_p
 mpirun -np 4 ./mpi_all_gather_p
 mpirun -np 8 ./mpi_all_gather_p
+mpirun -np 12 ./mpi_all_gather_p
 mpirun -np 16 ./mpi_all_gather_p
+mpirun -np 20 ./mpi_all_gather_p
+mpirun -np 26 ./mpi_all_gather_p
 mpirun -np 32 ./mpi_all_gather_p
+mpirun -np 40 ./mpi_all_gather_p
 mpirun -np 48 ./mpi_all_gather_p
 #

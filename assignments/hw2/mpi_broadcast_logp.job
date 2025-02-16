@@ -18,7 +18,11 @@ mpirun -np 1 ./mpi_broadcast_logp
 mpirun -np 2 ./mpi_broadcast_logp
 mpirun -np 4 ./mpi_broadcast_logp
 mpirun -np 8 ./mpi_broadcast_logp
+mpirun -np 12 ./mpi_broadcast_logp
 mpirun -np 16 ./mpi_broadcast_logp
+mpirun -np 20 ./mpi_broadcast_logp
+mpirun -np 26 ./mpi_broadcast_logp
 mpirun -np 32 ./mpi_broadcast_logp
+mpirun -np 40 ./mpi_broadcast_logp
 mpirun -np 48 ./mpi_broadcast_logp
 #
