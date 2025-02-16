@@ -24,6 +24,7 @@ int main(int argc, char **argv)
 
   int data_max = data;
 
+  MPI_Barrier(MPI_COMM_WORLD);
   double start_time = MPI_Wtime(); // start time
   if (lchild < world_size)
   {
@@ -46,6 +47,7 @@ int main(int argc, char **argv)
   {
     MPI_Send(&data_max, 1, MPI_INT, parent, 0, MPI_COMM_WORLD);
   }
+  MPI_Barrier(MPI_COMM_WORLD);
   double end_time = MPI_Wtime(); // end time
 
   if (rank == 0)

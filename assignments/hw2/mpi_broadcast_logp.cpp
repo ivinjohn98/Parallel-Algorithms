@@ -24,6 +24,7 @@ int main(int argc, char **argv)
   int lchild = 2 * rank + 1;
   int rchild = 2 * rank + 2;
 
+  MPI_Barrier(MPI_COMM_WORLD);
   double start_time = MPI_Wtime(); // start time
   if (rank != 0)
   {
@@ -38,6 +39,7 @@ int main(int argc, char **argv)
   {
     MPI_Send(&data, 1, MPI_INT, rchild, 0, MPI_COMM_WORLD);
   }
+  MPI_Barrier(MPI_COMM_WORLD);
   double end_time = MPI_Wtime(); // end time
 
   if (rank == 0)

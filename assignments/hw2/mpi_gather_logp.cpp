@@ -23,7 +23,8 @@ int main(int argc, char **argv)
   int rchild = 2 * rank + 2;
 
   std::vector<int> recv_buffer;
-
+  
+  MPI_Barrier(MPI_COMM_WORLD);
   double start_time = MPI_Wtime(); // start time
   if (lchild < world_size)
   {
@@ -51,6 +52,7 @@ int main(int argc, char **argv)
   }
   else
   {
+    MPI_Barrier(MPI_COMM_WORLD);
     double end_time = MPI_Wtime(); // end time
     std::cout << "Number of elements (N) = " << world_size << std::endl;
     std::cout << "Number of Threads (P) = " << world_size << std::endl;
