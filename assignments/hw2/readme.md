@@ -38,11 +38,36 @@
 Weak scaling measures how the solution time changes when the problem size increases in proportion to the number of processing units. Ideally, the execution time should remain constant if the computation scales perfectly in parallel algorithms.
 
 The following algorithms have been implemented and tested:
-1. Broadcast: Implemented in both O(P)-time and O(log(P))-time.
+1. **Broadcast**: Implemented in both O(P)-time and O(log(P))-time.
+    - For O(log(P))-time implementation:
+      ```bash
+      mpicxx -o mpi_broadcast_logp mpi_broadcast_logp.cpp
+      mpirun mpi_broadcast_logp
+      ```
+    - For O(P)-time implementation:
+      ```bash
+      mpicxx -o mpi_broadcast_p mpi_broadcast_p.cpp
+      mpirun mpi_broadcast_p
+      ```
+
+2. **Reduce**: Implemented in O(log(P))-time.
+    ```bash
+    mpicxx -o mpi_reduce_logp mpi_reduce_logp.cpp
+    mpirun mpi_reduce_logp
+    ```
+
+3. **Gather**: Implemented in O(log(P))-time.
+    ```bash
+    mpicxx -o mpi_gather_p mpi_gather_logp.cpp
+    mpirun mpi_gather_logp
+    ```
+
+4. **AllGather**: Implemented using a ring algorithm in O(P)-time.
+    ```bash
     mpicxx -o mpi_all_gather_p mpi_all_gather_p.cpp
-2. Reduce: Implemented in the O(log(P))-time.
-3. Gather: Implemented in the O(log(P))-time.
-4. AllGather: Implemented using a ring algorithm in O(P)-time.
+    mpirun mpi_all_gather_p
+    ```
+
 
 Additionally, for the weak scaling study the standard MPI version of the above algorithms were implemented.
 
