@@ -40,7 +40,7 @@ int main(int argc, char **argv)
 
     data_gattered.push_back(recv_buffer);
     next_data_to_send = recv_buffer;
-  }
+  } 
 
   MPI_Barrier(MPI_COMM_WORLD);
   double end_time = MPI_Wtime(); // end time

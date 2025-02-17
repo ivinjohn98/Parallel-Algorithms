@@ -15,22 +15,25 @@ int main(int argc, char **argv)
   MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
   int data = -1;
+  // The process with rank 0 has data 42
   if (rank == 0)
   {
     data = 42;
   }
 
+  // Synchronize all processes before starting the communication
+  MPI_Barrier(MPI_COMM_WORLD);
+  double start_time = MPI_Wtime(); // start time
+
+  // tree node positions calculated here
   int parent = (rank - 1) / 2;
   int lchild = 2 * rank + 1;
   int rchild = 2 * rank + 2;
 
-  MPI_Barrier(MPI_COMM_WORLD);
-  double start_time = MPI_Wtime(); // start time
   if (rank != 0)
   {
     MPI_Recv(&data, 1, MPI_INT, parent, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
   }
-
   if (lchild < world_size)
   {
     MPI_Send(&data, 1, MPI_INT, lchild, 0, MPI_COMM_WORLD);
@@ -40,6 +43,7 @@ int main(int argc, char **argv)
     MPI_Send(&data, 1, MPI_INT, rchild, 0, MPI_COMM_WORLD);
   }
   MPI_Barrier(MPI_COMM_WORLD);
+
   double end_time = MPI_Wtime(); // end time
 
   if (rank == 0)
