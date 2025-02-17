@@ -30,18 +30,23 @@ int main(int argc, char **argv)
   int lchild = 2 * rank + 1;
   int rchild = 2 * rank + 2;
 
+  // If the process is not root -> receive data from the parent
   if (rank != 0)
   {
     MPI_Recv(&data, 1, MPI_INT, parent, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
   }
+  // If the left child exists -> send data to the left child
   if (lchild < world_size)
   {
     MPI_Send(&data, 1, MPI_INT, lchild, 0, MPI_COMM_WORLD);
   }
+  // If the right child exists -> send data to the right child
   if (rchild < world_size)
   {
     MPI_Send(&data, 1, MPI_INT, rchild, 0, MPI_COMM_WORLD);
   }
+  
+  // Synchronize all processes again after communication is done
   MPI_Barrier(MPI_COMM_WORLD);
 
   double end_time = MPI_Wtime(); // end time
@@ -53,7 +58,7 @@ int main(int argc, char **argv)
     std::cout << "Elapsed time (t) = " << end_time - start_time << std::endl;
   }
 
-  // std::cout << "Rank " << rank << " data = " << data << std::endl;
+  std::cout << "Rank " << rank << " data = " << data << std::endl;
 
   // Finalize MPI
   MPI_Finalize();

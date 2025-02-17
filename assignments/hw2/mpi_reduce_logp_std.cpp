@@ -20,9 +20,9 @@ int main(int argc, char **argv)
   double start_time = MPI_Wtime(); // start time
   MPI_Reduce(&data, &data_max, 1, MPI_INT, MPI_MAX, 0, MPI_COMM_WORLD);
   double end_time = MPI_Wtime(); // end time
-  // if (rank == 0) {
-  //   std::cout << "Rank " << rank << " data = " << data << " data max = " << data_max << std::endl;
-  // }
+  if (rank == 0) {
+    std::cout << "Rank " << rank << " data = " << data << " data max = " << data_max << std::endl;
+  }
   if (rank == 0)
   {
     std::cout << "Number of elements (N) = " << world_size << std::endl;

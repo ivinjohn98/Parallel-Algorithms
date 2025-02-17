@@ -28,20 +28,25 @@ int main(int argc, char **argv)
   int next_data_to_send = data;
   int recv_buffer;
 
-  for (size_t i = 0; i < world_size - 1; ++i)
-  { // P-1 iterations
+  for (size_t i = 0; i < world_size - 1; ++i) // P-1 iterations
+  { 
 
     MPI_Request requests[2];
     MPI_Status status[2];
     
+    // non-blocking receive from the previous process
     MPI_Irecv(&recv_buffer, 1, MPI_INT, prevP, 0, MPI_COMM_WORLD, &requests[0]);
+    // non-blocking send to the next process
     MPI_Isend(&next_data_to_send, 1, MPI_INT, nextP, 0, MPI_COMM_WORLD, &requests[1]);
+
+    // Wait for both communication operations to complete
     MPI_Waitall(2, requests, status);
 
     data_gattered.push_back(recv_buffer);
     next_data_to_send = recv_buffer;
   } 
 
+  // Synchronize all processes to ensure proper timing for measurements
   MPI_Barrier(MPI_COMM_WORLD);
   double end_time = MPI_Wtime(); // end time
 
@@ -51,12 +56,12 @@ int main(int argc, char **argv)
     std::cout << "Number of Threads (P) = " << world_size << std::endl;
     std::cout << "Elapsed time (t) = " << end_time - start_time << std::endl;
 
-    // std::cout << "Rank 0 gathered data: ";
-    // for (int num : data_gattered)
-    // {
-    //   std::cout << num << " ";
-    // }
-    // std::cout << std::endl;
+    std::cout << "Rank 0 gathered data: ";
+    for (int num : data_gattered)
+    {
+      std::cout << num << " ";
+    }
+    std::cout << std::endl;
   }
 
   // Finalize MPI
