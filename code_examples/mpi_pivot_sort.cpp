@@ -98,11 +98,30 @@ int main(int argc, char **argv) {
     }
   }
 
+  std::vector< std::vector<int> > recv_bufs(world_size);
+  std::vector< int > size_recv(world_size, 0);
+  std::vector< MPI_Request > size_recv_req(world_size);
+  // Sets up P MPI_Irecvs
+  for(int i = 0; i < world_size; ++i) {
+    MPI_Irecv(&size_recv[i], 1, MPI_INT, i,
+              0, MPI_COMM_WORLD, &size_recv_req[i]);
+  }
+  for(int i = 0; i < world_size; ++i) {
+    int to_send = send_bufs[i].size();
+    MPI_Send(&to_send, 1, MPI_INT, i, 0, MPI_COMM_WORLD);
+  }
+  MPI_Waitall(size_recv_req.size(), size_recv_req.data(), 
+    MPI_STATUS_IGNORE);
+
+  if(world_rank == 0) {
+    for(int val : size_recv) {
+      std::cout << val << " ";
+    }
+    std::cout << std::endl;
+  }
+
 
   //TO BE CONTINUED
-
-
-
 
   // Finalize MPI
   MPI_Finalize();
