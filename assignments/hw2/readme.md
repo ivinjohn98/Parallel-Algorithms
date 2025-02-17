@@ -33,13 +33,13 @@
 * Commit and push your code into this directory of your fork
 * Commit and push your report and figures to this file and directory
 
-
 ## Student Report
 
 Weak scaling measures how the solution time changes when the problem size increases in proportion to the number of processing units. Ideally, the execution time should remain constant if the computation scales perfectly in parallel algorithms.
 
 The following algorithms have been implemented and tested:
 1. Broadcast: Implemented in both O(P)-time and O(log(P))-time.
+    mpicxx -o mpi_all_gather_p mpi_all_gather_p.cpp
 2. Reduce: Implemented in the O(log(P))-time.
 3. Gather: Implemented in the O(log(P))-time.
 4. AllGather: Implemented using a ring algorithm in O(P)-time.

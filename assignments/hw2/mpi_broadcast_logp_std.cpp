@@ -31,7 +31,7 @@ int main(int argc, char **argv)
     std::cout << "Elapsed time (t) = " << end_time - start_time << std::endl;
   }
 
-  // std::cout << "Rank " << rank << " data = " << data << std::endl;
+  std::cout << "Rank " << rank << " data = " << data << std::endl;
 
   // Finalize MPI
   MPI_Finalize();

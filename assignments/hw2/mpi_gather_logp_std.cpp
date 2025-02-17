@@ -27,14 +27,14 @@ int main(int argc, char **argv)
   MPI_Gather(&data, 1, MPI_INT, data_gathered.data(), 1, MPI_INT, 0, MPI_COMM_WORLD);
   double end_time = MPI_Wtime(); // end time
 
-  // if (rank == 0) {
-  //   std::cout << "Rank 0 gathered data: ";
-  //   for (int num : data_gathered)
-  //   {
-  //     std::cout << num << " ";
-  //   }
-  //   std::cout << std::endl;
-  // }
+  if (rank == 0) {
+    std::cout << "Rank 0 gathered data: ";
+    for (int num : data_gathered)
+    {
+      std::cout << num << " ";
+    }
+    std::cout << std::endl;
+  }
   if (rank == 0)
   {
     std::cout << "Number of elements (N) = " << world_size << std::endl;
