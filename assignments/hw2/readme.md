@@ -84,7 +84,7 @@ Processor counts: [1, 2, 4, 6, 8, 12, 16, 20, 26, 32, 40, 48]
 
 In the weak scaling study, the custom O(log(P))-time gather algorithm shows efficient performance for lower processor counts but experiences a significant increase in execution time beyond 32 processors. This is due to communication and synchronization overheads as the processors increases.
 
-In my gather algorithm, I first send the total number of elements to be sent, then the corresponding array with elements in it. This might create additional overhead and cause communication bottlenecks while scaling. This could be one of the reasons why our algorithm performs poorly after 40 processor counts.
+In my gather algorithm, I first send the total number of elements to be sent, then the corresponding array with elements in it. This might create additional overhead and cause communication bottlenecks while scaling. This could be one of the reasons why our algorithm performs poorly after 40 processor counts. Perhaps, MPI standard algorithm might MPI_Isend or MPI_Irecv constructs to improve performance here.
 
 Additionally, as the number of processors increases, although the time complexity remains O(log P) with a log(P)-depth tree, the data transferred to the parent node from the child node doubles at each level. As a result, the top node must collect all n elements in a single operation. There may be better optimizations in the standard MPI_Gather algorithm to prevent the cumulative increase in data transfer at each tree level. This might explain the spike in processing time beyond 40 processors.
 
