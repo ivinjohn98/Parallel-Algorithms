@@ -36,32 +36,30 @@ int main(int argc, char **argv) {
   MPI_Init(&argc, &argv);
 
   // Get the rank of the process
- 
   MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
 
   // Get the total number of ranks
-
   MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
   int k = std::stoi(argv[1]);
+  int number_of_elements_per_proc = std::stoi(argv[2]);
 
   // std::cout << "Howdy from " << world_rank << " of " << world_size << std::endl;
 
   std::mt19937 gen(world_rank); 
   std::uniform_int_distribution<> distrib(0, 10000000);
-  
+
   std::vector<int> local_data;
-  for(int i = 0; i< 1000000; ++i) {
+  for(int i = 0; i< number_of_elements_per_proc; ++i) {
     local_data.push_back(distrib(gen));
   }
 
-  print_in_order(local_data);
-  MPI_Barrier(MPI_COMM_WORLD);
+  // print_in_order(local_data);
 
   //
   // Sample P pivots   O(1)
   // TODO Homework 3 -- Sample k pivots per process
-
+  MPI_Barrier(MPI_COMM_WORLD);
   double start_time = MPI_Wtime();
   std::uniform_int_distribution<> sampler(0, local_data.size()-1);
   std::vector<int> local_sampled_pivots;
@@ -89,13 +87,13 @@ int main(int argc, char **argv) {
       pivots.push_back(k_pivots[i]);
   }
 
-  if(world_rank == 2) {
-    std::cout << "PIVOTS = ";
-    for(int p : pivots) {
-      std::cout << p << " ";
-    }
-    std::cout << std::endl;
-  }
+  // if(world_rank == 2) {
+  //   std::cout << "PIVOTS = ";
+  //   for(int p : pivots) {
+  //     std::cout << p << " ";
+  //   }
+  //   std::cout << std::endl;
+  // }
 
   std::vector< std::vector<int> > send_bufs(world_size);
   
@@ -178,7 +176,7 @@ int main(int argc, char **argv) {
   // MPI provided function for Prefix Sum.
   MPI_Exscan(&ps_send, &ps_recv, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
 
-  int ideal_N_by_P = 5 * world_size / world_size;
+  int ideal_N_by_P = number_of_elements_per_proc * world_size / world_size;
 
   std::vector< std::vector<int> > send_bufs_balance(world_size);
 
@@ -237,8 +235,8 @@ int main(int argc, char **argv) {
   
   print_in_order(sorted_data_balance);
 
-  if (world_rank = 0) {
-    std::cout << "time elapsed: " << end_time - start_time << std::endl;
+  if (world_rank == 0) {
+    std::cout << "time elapsed: " << end_time - start_time << " , k_value: " << k << std::endl;
   }
   // Finalize MPI
   MPI_Finalize();
