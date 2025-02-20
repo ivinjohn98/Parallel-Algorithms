@@ -60,23 +60,31 @@ int main(int argc, char **argv) {
   //
   // Sample P pivots   O(1)
   // TODO Homework 3 -- Sample k pivots per process
+  int k = 10;
   std::uniform_int_distribution<> sampler(0, local_data.size()-1);
-  int local_sampled_pivot = local_data[sampler(gen)];
+  std::vector<int> local_sampled_pivots;
+  for (int i=0; i< k; i++) {
+    int local_sampled_pivot = local_data[sampler(gen)];
+    local_sampled_pivots.push_back(local_sampled_pivot);
+  }
 
-  std::vector<int> pivots(world_size, 0);
+  std::vector<int> k_pivots(world_size * k, 0);
   
   //
   // Sharing of pivots O(P)
-  MPI_Allgather(&local_sampled_pivot, 1, MPI_INT,
-    pivots.data(), 1, MPI_INT, MPI_COMM_WORLD);
+  MPI_Allgather(local_sampled_pivots.data(), k, MPI_INT, 
+    k_pivots.data(), 1, MPI_INT, MPI_COMM_WORLD);
 
   //
   // Assume Quicksort:   O(P*lg(P))
-  std::sort(pivots.begin(), pivots.end());
+  std::sort(k_pivots.begin(), k_pivots.end());
 
   //
   // TODO Homework 3 -- Pick "best" P-1 pivots from oversampled
-  pivots.pop_back();
+  std::vector<int> pivots;
+  for (int i=0; i< k* world_size; i+k) {
+    pivots.push_back(k_pivots[i]);
+  }
 
   if(world_rank == 2) {
     std::cout << "PIVOTS = ";
@@ -140,7 +148,6 @@ int main(int argc, char **argv) {
   MPI_Waitall(data_recv_req.size(), data_recv_req.data(), 
     MPI_STATUS_IGNORE);
 
-
   //  If balanced:   O(N/P)
   std::vector<int> sorted_data;
   for(int i = 0; i < world_size; ++i) {
@@ -156,12 +163,71 @@ int main(int argc, char **argv) {
   MPI_Barrier(MPI_COMM_WORLD);
   double end_time = MPI_Wtime();
 
-
   //OVERALL SO FAR, if N>>P & data is balanced:   O(N/P * lg(N/P))
 
   //TODO Homework 3 -- balance sorted_data vector
 
-  print_in_order(sorted_data);
+  // My code starts here:
+  int ps_send = recv_bufs.at(world_rank).size();
+  int ps_recv = 0;
+
+  // MPI provided function for Prefix Sum.
+  MPI_Exscan(&ps_send, &ps_recv, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+
+  int total_N = 0;
+  MPI_Allreduce(&ps_send, &total_N, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+  int ideal_N_by_P = total_N / world_size;
+
+  std::vector< std::vector<int> > send_bufs_balance(world_size);
+
+  // Creating send buckets:  O(N/P * lg(P))
+  for (size_t i = 0; i < recv_bufs.at(world_rank).size(); ++i) {
+    send_bufs_balance.at((ps_recv+ i)/ideal_N_by_P).push_back(recv_bufs.at(world_rank)[i]);
+  }
+
+  std::vector< std::vector<int> > recv_bufs_balance(world_size);
+  std::vector< int > size_recv_balance(world_size, 0);
+  std::vector< MPI_Request > size_recv_req_balance(world_size);
+  // Sets up P MPI_Irecvs to get future send size O(P)
+  for(int i = 0; i < world_size; ++i) {
+    MPI_Irecv(&size_recv_balance[i], 1, MPI_INT, i,
+              0, MPI_COMM_WORLD, &size_recv_req_balance[i]);
+  }
+  // Send future send size to all ranks O(P)
+  for(int i = 0; i < world_size; ++i) {
+    int to_rank = (world_rank + i) % world_size;
+    int to_send = send_bufs_balance[to_rank].size();
+    MPI_Send(&to_send, 1, MPI_INT, to_rank, 0, MPI_COMM_WORLD);
+  }
+  MPI_Waitall(size_recv_req_balance.size(), size_recv_req_balance.data(), 
+    MPI_STATUS_IGNORE);
+
+  // Post Irecv for every sending rank O(P)
+  std::vector< MPI_Request > data_recv_req_balance(world_size);
+  for(int i = 0; i < world_size; ++i) {
+    recv_bufs_balance.at(i).resize(size_recv_balance.at(i));
+    MPI_Irecv(recv_bufs_balance.at(i).data(), size_recv_balance.at(i), MPI_INT, i,
+              0, MPI_COMM_WORLD, &data_recv_req_balance[i]);
+  }
+  // Send data to every rank O(P)
+  for(int i = 0; i < world_size; ++i) {
+    int to_rank = (world_rank + i) % world_size;
+    MPI_Send(send_bufs_balance[to_rank].data(), send_bufs_balance[to_rank].size(), 
+             MPI_INT, to_rank, 0, MPI_COMM_WORLD);
+  }
+  MPI_Waitall(data_recv_req_balance.size(), data_recv_req_balance.data(), 
+    MPI_STATUS_IGNORE);
+
+  std::vector<int> sorted_data_balance;
+  for(int i = 0; i < world_size; ++i) {
+    for(int val : recv_bufs_balance[i]) {
+      sorted_data_balance.push_back(val);
+    }
+  }
+  
+  // my code ends here.
+
+  print_in_order(sorted_data_balance);
   // Finalize MPI
   MPI_Finalize();
 }
