@@ -15,11 +15,11 @@ module load GCC OpenMPI
 #
 
 mpirun -np 1 ./mpi_k_pivot_sort_balanced 100 1000000
-mpirun -np 2 ./mpi_k_pivot_sort_balanced 100 1000000
-mpirun -np 4 ./mpi_k_pivot_sort_balanced 100 1000000
-mpirun -np 8 ./mpi_k_pivot_sort_balanced 100 1000000
-mpirun -np 16 ./mpi_k_pivot_sort_balanced 100 1000000
-mpirun -np 32 ./mpi_k_pivot_sort_balanced 100 1000000
-mpirun -np 64 ./mpi_k_pivot_sort_balanced 100 1000000
-mpirun -np 128 ./mpi_k_pivot_sort_balanced 100 1000000
+mpirun -np 2 ./mpi_k_pivot_sort_balanced 100 2000000
+mpirun -np 4 ./mpi_k_pivot_sort_balanced 100 4000000
+mpirun -np 8 ./mpi_k_pivot_sort_balanced 100 8000000
+mpirun -np 16 ./mpi_k_pivot_sort_balanced 100 16000000
+mpirun -np 32 ./mpi_k_pivot_sort_balanced 100 32000000
+mpirun -np 64 ./mpi_k_pivot_sort_balanced 100 64000000
+mpirun -np 128 ./mpi_k_pivot_sort_balanced 100 128000000
 #
