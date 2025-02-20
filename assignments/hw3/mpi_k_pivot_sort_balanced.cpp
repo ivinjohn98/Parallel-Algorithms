@@ -14,6 +14,8 @@ void print_in_order(const std::vector<int>& local_data) {
   // MPI provided function for Prefix Sum.
   MPI_Exscan(&ps_send, &ps_recv, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
 
+  MPI_Barrier(MPI_COMM_WORLD);
+
   //std::cout << "PS: " << world_rank << " " << ps_recv << std::endl;
 
   for(int token = 0;  token < world_size; ++token) {
@@ -41,25 +43,26 @@ int main(int argc, char **argv) {
 
   MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
-  std::cout << "Howdy from " << world_rank << " of " << world_size << std::endl;
+  int k = std::stoi(argv[1]);
 
+  // std::cout << "Howdy from " << world_rank << " of " << world_size << std::endl;
 
   std::mt19937 gen(world_rank); 
-  std::uniform_int_distribution<> distrib(0, 100);
+  std::uniform_int_distribution<> distrib(0, 10000000);
   
   std::vector<int> local_data;
-  for(int i = 0; i<5; ++i) {
+  for(int i = 0; i< 1000000; ++i) {
     local_data.push_back(distrib(gen));
   }
 
-
   print_in_order(local_data);
-
+  MPI_Barrier(MPI_COMM_WORLD);
 
   //
   // Sample P pivots   O(1)
   // TODO Homework 3 -- Sample k pivots per process
-  int k = 10;
+
+  double start_time = MPI_Wtime();
   std::uniform_int_distribution<> sampler(0, local_data.size()-1);
   std::vector<int> local_sampled_pivots;
   for (int i=0; i< k; i++) {
@@ -105,15 +108,15 @@ int main(int argc, char **argv) {
     send_bufs.at(dest_rank).push_back(val);
   }
 
-  if(world_rank == 0) {
-    for(int dr = 0; dr < world_size; ++dr) {
-      std::cout << "Sending to " << dr << ": ";
-      for(int val : send_bufs[dr]) {
-        std::cout << val << " ";
-      }
-      std::cout << std::endl;
-    }
-  }
+  // if(world_rank == 0) {
+  //   for(int dr = 0; dr < world_size; ++dr) {
+  //     std::cout << "Sending to " << dr << ": ";
+  //     for(int val : send_bufs[dr]) {
+  //       std::cout << val << " ";
+  //     }
+  //     std::cout << std::endl;
+  //   }
+  // }
 
   std::vector< std::vector<int> > recv_bufs(world_size);
   std::vector< int > size_recv(world_size, 0);
@@ -158,47 +161,48 @@ int main(int argc, char **argv) {
 
   // If baalanced:   O(N/P * lg(N/P))
   MPI_Barrier(MPI_COMM_WORLD);
-  double start_time = MPI_Wtime();
   std::sort(sorted_data.begin(), sorted_data.end());
   MPI_Barrier(MPI_COMM_WORLD);
-  double end_time = MPI_Wtime();
+
+  // print_in_order(sorted_data);
+  // MPI_Barrier(MPI_COMM_WORLD);
 
   //OVERALL SO FAR, if N>>P & data is balanced:   O(N/P * lg(N/P))
 
   //TODO Homework 3 -- balance sorted_data vector
 
   // My code starts here:
-  int ps_send = recv_bufs.at(world_rank).size();
+  int ps_send = sorted_data.size();
   int ps_recv = 0;
 
   // MPI provided function for Prefix Sum.
   MPI_Exscan(&ps_send, &ps_recv, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
 
-  int total_N = 0;
-  MPI_Allreduce(&ps_send, &total_N, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-  int ideal_N_by_P = total_N / world_size;
+  int ideal_N_by_P = 5 * world_size / world_size;
 
   std::vector< std::vector<int> > send_bufs_balance(world_size);
 
   // Creating send buckets:  O(N/P * lg(P))
-  for (size_t i = 0; i < recv_bufs.at(world_rank).size(); ++i) {
-    send_bufs_balance.at((ps_recv+ i)/ideal_N_by_P).push_back(recv_bufs.at(world_rank)[i]);
+  for (size_t i = 0; i < sorted_data.size(); ++i) {
+    send_bufs_balance.at((ps_recv + i)/ideal_N_by_P).push_back(sorted_data[i]);
   }
 
   std::vector< std::vector<int> > recv_bufs_balance(world_size);
   std::vector< int > size_recv_balance(world_size, 0);
   std::vector< MPI_Request > size_recv_req_balance(world_size);
-  // Sets up P MPI_Irecvs to get future send size O(P)
+  // Sets up P MPI_Irecvs to get sorted data size O(P)
   for(int i = 0; i < world_size; ++i) {
     MPI_Irecv(&size_recv_balance[i], 1, MPI_INT, i,
               0, MPI_COMM_WORLD, &size_recv_req_balance[i]);
   }
-  // Send future send size to all ranks O(P)
+
+  // Send sorted data size to all ranks O(P)
   for(int i = 0; i < world_size; ++i) {
     int to_rank = (world_rank + i) % world_size;
     int to_send = send_bufs_balance[to_rank].size();
     MPI_Send(&to_send, 1, MPI_INT, to_rank, 0, MPI_COMM_WORLD);
   }
+
   MPI_Waitall(size_recv_req_balance.size(), size_recv_req_balance.data(), 
     MPI_STATUS_IGNORE);
 
@@ -215,6 +219,7 @@ int main(int argc, char **argv) {
     MPI_Send(send_bufs_balance[to_rank].data(), send_bufs_balance[to_rank].size(), 
              MPI_INT, to_rank, 0, MPI_COMM_WORLD);
   }
+
   MPI_Waitall(data_recv_req_balance.size(), data_recv_req_balance.data(), 
     MPI_STATUS_IGNORE);
 
@@ -227,7 +232,14 @@ int main(int argc, char **argv) {
   
   // my code ends here.
 
+  MPI_Barrier(MPI_COMM_WORLD);
+  double end_time = MPI_Wtime();
+  
   print_in_order(sorted_data_balance);
+
+  if (world_rank = 0) {
+    std::cout << "time elapsed: " << end_time - start_time << std::endl;
+  }
   // Finalize MPI
   MPI_Finalize();
 }
