@@ -44,7 +44,6 @@ int main(int argc, char **argv) {
   std::cout << "Howdy from " << world_rank << " of " << world_size << std::endl;
 
 
-
   std::mt19937 gen(world_rank); 
   std::uniform_int_distribution<> distrib(0, 100);
   
@@ -72,18 +71,19 @@ int main(int argc, char **argv) {
   
   //
   // Sharing of pivots O(P)
-  MPI_Allgather(local_sampled_pivots.data(), k, MPI_INT, 
-    k_pivots.data(), 1, MPI_INT, MPI_COMM_WORLD);
 
+  MPI_Allgather(local_sampled_pivots.data(), k, MPI_INT, 
+    k_pivots.data(), k, MPI_INT, MPI_COMM_WORLD);
   //
-  // Assume Quicksort:   O(P*lg(P))
+  // Assume Quicksort:   O(P*lg(P))   
   std::sort(k_pivots.begin(), k_pivots.end());
 
   //
   // TODO Homework 3 -- Pick "best" P-1 pivots from oversampled
   std::vector<int> pivots;
-  for (int i=0; i< k* world_size; i+k) {
-    pivots.push_back(k_pivots[i]);
+  int step = (k * world_size) / world_size;  // Evenly space the selection
+  for (int i = step; i < k * world_size; i += step) {
+      pivots.push_back(k_pivots[i]);
   }
 
   if(world_rank == 2) {
