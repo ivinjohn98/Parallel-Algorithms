@@ -29,8 +29,6 @@ void print_in_order(const std::vector<int>& local_data) {
   }
 }
 
-
-
 int main(int argc, char **argv) {
   // Initialize MPI
   MPI_Init(&argc, &argv);
