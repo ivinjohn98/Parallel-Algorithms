@@ -61,9 +61,14 @@ O((N/P) log(N/P) + N log(P))
 
 This is the total time complexity for parallel merge sort.
 
-* 20pts for correct sorted array balancing
-* 20pts for correct pivot oversampling
-
+# 20pts for correct sorted array balancing & 20pts for correct pivot oversampling
+To run the algorithm use the below commands:
+```bash
+mpicxx -o mpi_k_pivot_sort_balanced mpi_k_pivot_sort_balanced.cpp
+mpirun -np <number of processors> mpi_k_pivot_sort_balanced <k> <Number of elements per processor>
+## example mpirun -np 100 mpi_k_pivot_sort_balanced 100 1000000
+```
+Screenshot after balancing is as shown below along with the pivots selected:
 ![implentation results](implementation_results.png)
 
 # Strong Scaling Experiment and Report (10 pts)
