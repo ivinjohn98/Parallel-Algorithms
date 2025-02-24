@@ -121,11 +121,11 @@ Weak scaling measures how the solution time changes when the problem size increa
 ## Observation:
 Though the graph appears to increase linearly, the actual interval of increase is very small, with fluctuations, such as at 64 processors. The difference in elapsed time is less than half a second, indicating that the weak scaling results are reasonable. The slight increase in time as the number of processors grows, while keeping the total number of elements the same (128,000,000), could be attributed to noise and communication overhead between processors.
 
-The major reason for this increase is due to fixed oversampling factor \( k = 100 \). As the number of processors doubles, the number of elements also doubles, but since \( k \) remains constant, the oversampling is performed over a much larger dataset. This results in the time increase, as uneven data distribution may impact performance, especially at 128,000,000 elements. The probability of not selecting good pivots increases as we go from (sampling 100 elements and 1,000,000 elements) to (sampling 100 elements from 128,000,000 elements), which could explain this time increase that is observed.
+The major reason for this increase is due to fixed oversampling factor \( k = 100 \). As the number of processors doubles, the number of elements also doubles, but since \( k \) remains constant, the oversampling is performed over a much larger dataset. This results in the time increase, as uneven data distribution may impact performance, especially at 128,000,000 elements. Even though, probability of not selecting good pivots is same as we go from (sampling 100 elements and 1,000,000 elements) to (sampling 12800 elements from 128,000,000 elements).
 
 I experimented with doubling the sampling factor \( k \) along with the number of processors and data size, but this did not yield consistent improvements across all cases. This is likely due to the gather time cost of collecting all sampled pivots.  
 
-For instance, at 128 processors and 128,000,000 elements, I tested with \( k = 128,000 \), which should ideally improve pivot selection. However, the elapsed time was 1.71416 seconds, which is slower than the 1.06661 seconds observed with \( k = 100 \). The ideal value for \( k \) seems to be around 700 for 128 processors. Experiments on determining this patterns are shown below.
+The ideal value for \( k \) seems to be around 700 for 128 processors. Experiments on determining this patterns are shown below.
 
 ![Weak scaling experiments in finding optimum k for 1000000 data per 128 processors](experiments_with_k_in_weak_scaling.png)
 
