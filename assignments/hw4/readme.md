@@ -28,9 +28,9 @@ mpirun bfs_example
 
 
 ## Deliverables and Rubric
-* 20pts for a correct implmentation of Delta Stepping SSSP
+* 20pts for a correct implementation of Delta Stepping SSSP
 * 20pts for weak scaling experiments and discussion
-* 20pts for strong scaling experiments and dicussion
+* 20pts for strong scaling experiments and discussion
 * 20pts for average degree sensitivity experiments and discussion
 * 20pts for maximum edge weight experiments and discussion
 
