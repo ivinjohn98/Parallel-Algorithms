@@ -41,3 +41,4 @@ code_examples/sequential_prefixsum
 code_examples/openmp_scaling_example
 code_examples/mpi_broadcast
 code_examples/mpi_pivot_sort
+assignments/hw4/build
