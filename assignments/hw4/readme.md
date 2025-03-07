@@ -18,7 +18,7 @@ mpirun bfs_example
 ## Objectives
 * Using either raw MPI or YGM, implement Delta Stepping SSSP
 * Perform both weak and strong scaling experiments using
-  uniformly generated random weighted edges
+  uniformly generated random weighted edges with an average degree of 16
 * Design experiments such that you evaluate the sensitivity on 
   the maximum edge weight as well as the average degree of the graph
 

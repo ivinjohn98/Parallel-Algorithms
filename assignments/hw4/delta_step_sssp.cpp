@@ -12,10 +12,11 @@ int main(int argc, char** argv) {
   // TODO:   
   // * Take as arguments # vertices (N),  # edges (M) & Max edge weight (W)
   // * Generate M edges uniformly at random between the N vertices
-  //   with edge weights sampled from [1,W)
+  //   with edge weights sampled from [1,W]
   // * Store edges in a 1D partitioned adjacency list using either a 
   //   ygm::container::map    or    ygm::container::array
   // * Implement Delta Stepping BFS
+  // * Use the Delta estimation provided in the paper in section 3.2
 
   //
   // OPTIONAL:   You may also elect to read in an edge list from a file
