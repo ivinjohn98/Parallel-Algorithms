@@ -17,6 +17,9 @@ struct vert_info {
   std::vector<int> light_edges_weights;
   std::vector<int> heavy_edges;
   std::vector<int> heavy_edges_weights;
+  std::vector<std::set<int>> buckets;
+  
+  vert_info() : buckets(42 / 3 + 1) {}  // Initialize in constructor
 };
 
 using graph_type = ygm::container::map<int, vert_info>;
@@ -39,38 +42,84 @@ void add_edge(graph_type &graph, int src, int dest, int weight, int delta) {
   graph.async_visit(dest, inserter, src, weight, delta);
 }
 
-void relax(std::vector<std::vector<int>> &buckets, int v, int new_dist, int delta, graph_type &graph, ygm::comm &world) {
+void add_src_to_bucket(graph_type &graph, int src, int bucket_index) {
+  auto inserter = [](int src, vert_info &vi, int bucket_index) {
+    vi.buckets[bucket_index].insert(src);
+  };
+  graph.async_visit(src, inserter, bucket_index);
+}
+
+void relax(int v, int new_dist, int delta, graph_type &graph, ygm::comm &world) {
   // Define the relaxer lambda to match async_visit signature
-  auto relaxer = [new_dist, delta](int v, vert_info &vi, std::vector<std::vector<int>> buckets) {
-    std::cout << "so far good2" << std::endl;
+  auto relaxer = [](int v, vert_info &vi, int new_dist, int delta) {
     if (new_dist < vi.dist) {
       int new_bucket = new_dist / delta;
       int old_bucket = vi.dist / delta;
       if (new_bucket != old_bucket) {
         // Find and remove the vertex from the old bucket
-        auto &old_bucket_list = buckets[old_bucket];
-        auto position = std::find(old_bucket_list.begin(), old_bucket_list.end(), v);
-        if (position != old_bucket_list.end()) {
-            old_bucket_list.erase(position);
-        }
+        vi.buckets[old_bucket].erase(v);
         // Add the vertex to the new bucket
-        buckets[new_bucket].push_back(v);
+        vi.buckets[new_bucket].insert(v);
       }
-      // Update the distance
-      int s = 0;
-      //vi.dist = new_dist;
+      // Update the distance with the new estimate.
+      vi.dist = new_dist;
     }
   };
 
   // Call async_visit, passing the relaxer as the visitor function
-  graph.async_visit(v, relaxer, buckets);
+  graph.async_visit(v, relaxer, new_dist, delta);
 }
 
-void delta_stepping(std::vector<std::vector<int>> &buckets, graph_type &graph, int source, int delta, ygm::comm &world) {
-  relax(buckets, source, 0, delta, graph, world);
-  /*graph.async_visit(source, [](int, vert_info &vi) {
-    vi.dist = 0;  // Distance of source vertex is 0
-  });*/
+void delta_stepping(graph_type &graph, int source, int delta, ygm::comm &world) {
+  relax(source, 0, delta, graph, world);
+  int current_bucket_index = 0;
+  while (current_bucket_index < (42/3)) {
+    std::set<int> light_relax;
+    world.barrier();
+    while (true) {
+      bool local_bucket_found = false;
+      graph.for_all([&current_bucket_index, &local_bucket_found](int v, vert_info &vi) {
+        if (!vi.buckets[current_bucket_index].empty()) {
+          local_bucket_found = true;
+        }
+      });
+      world.barrier();
+      bool global_bucket_found = world.all_reduce(local_bucket_found, std::logical_or<bool>());
+      if (!global_bucket_found)
+        break;
+      
+      graph.for_all([&](int src, vert_info &vi) {
+        if (vi.buckets[current_bucket_index].contains(src)) {
+          for (size_t i = 0; i < vi.light_edges.size(); i++) {
+            int neighbor = vi.light_edges[i];
+            int weight = vi.light_edges_weights[i];
+            relax(neighbor, vi.dist + weight, delta, graph, world);
+          }
+          light_relax.insert(src);
+          vi.buckets[current_bucket_index].erase(src);
+        }
+      });
+      world.barrier();
+    }
+    
+    /*world.barrier();
+    world.cout("Here we go:");
+    graph.for_all([&world](int src, vert_info &vi){
+      world.cout(src, " -> dist: ", vi.dist);
+    });*/
+    world.barrier();
+    
+    graph.for_all([&](int v, vert_info &vi) {
+      if (light_relax.contains(v)) {
+        for (size_t i = 0; i < vi.heavy_edges.size(); i++) {
+          int neighbor = vi.heavy_edges[i];
+          int weight = vi.heavy_edges_weights[i];
+          relax(neighbor, vi.dist + weight, delta, graph, world);
+        }
+      }
+    });
+    current_bucket_index++;
+  }
 }
 
 int main(int argc, char **argv) {
@@ -80,7 +129,6 @@ int main(int argc, char **argv) {
   graph_type graph(world);
   int delta = 3;
   
-  std::vector<std::vector<int>> buckets((42/delta) + 1);
   if(world.rank0()) {
     add_edge(graph, 0, 1, 4, delta);
     add_edge(graph, 0, 3, 8, delta);
@@ -90,10 +138,13 @@ int main(int argc, char **argv) {
     add_edge(graph, 3, 4, 7, delta);
     add_edge(graph, 4, 5, 6, delta);
     add_edge(graph, 3, 5, 1, delta);
-    
-    for (int i = 0; i < 6; i++) {
-      buckets[buckets.size()-1].push_back(i);
-    }
+  }
+  
+  world.barrier();
+  
+  
+  for (int src = 0; src < 6; src++) {
+    add_src_to_bucket(graph, src, ((42/delta) + 1) - 1);
   }
   
   // Synchronize to make sure all edges are added before printing
@@ -111,17 +162,16 @@ int main(int argc, char **argv) {
     }
   });*/
   
-  if (world.rank0()) {
-    delta_stepping(buckets, graph, 0, delta, world);  // Run from source vertex 0
-  }
+  world.barrier();
+  
+  delta_stepping(graph, 0, delta, world);  // Run from source vertex 0
   
   world.barrier();
   
   // Print results
   graph.for_all([&world](int src, vert_info &vi){
-    world.cout(src, " -> dist: ", vi.dist, "\n");
+    world.cout(src, " -> dist: ", vi.dist);
   });
 
   return 0;
 }
-
