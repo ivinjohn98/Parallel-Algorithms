@@ -200,15 +200,21 @@ int main(int argc, char **argv) {
     add_src_to_bucket(graph, v, bucket_index);
   }
   world.barrier();
+  double start_time = MPI_Wtime();
   
   delta_stepping(graph, 0, delta, world);  // Run from source vertex 0
   
   world.barrier();
+  double end_time = MPI_Wtime();
+  
+  if (world.rank0()) {
+    std::cout << "time elapsed: " << end_time - start_time << std::endl;
+  }
   
   // Print results
-  graph.for_all([&world](int src, vert_info &vi){
+  /*graph.for_all([&world](int src, vert_info &vi){
     world.cout(src, " -> dist: ", vi.dist);
-  });
+  });*/
 
   return 0;
 }
