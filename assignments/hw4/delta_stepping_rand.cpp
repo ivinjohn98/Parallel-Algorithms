@@ -30,10 +30,11 @@ struct vert_info {
 
 using graph_type = ygm::container::map<int, vert_info>;
 
-void intialize_vertex_info(graph_type &graph, int sum_weights, int delta) {
+void intialize_vertex_info(graph_type &graph, int sum_weights, int delta, int bucket_index) {
   graph.for_all([&](int src, vert_info &vi) {
     vi.dist = sum_weights;
     vi.initialize_buckets(sum_weights, delta);
+    vi.buckets[bucket_index].insert(src);
   });
 }
 
@@ -51,13 +52,6 @@ void add_edge(graph_type &graph, int src, int dest, int weight, int delta) {
   };
   graph.async_visit(src, inserter, dest, weight, delta); // Asynchronously add the edge to the graph
   graph.async_visit(dest, inserter, src, weight, delta);
-}
-
-void add_src_to_bucket(graph_type &graph, int src, int bucket_index) {
-  auto inserter = [](int src, vert_info &vi, int bucket_index) {
-    vi.buckets[bucket_index].insert(src);
-  };
-  graph.async_visit(src, inserter, bucket_index);
 }
 
 void relax(int v, int new_dist, int delta, graph_type &graph, ygm::comm &world) {
@@ -81,10 +75,10 @@ void relax(int v, int new_dist, int delta, graph_type &graph, ygm::comm &world) 
   graph.async_visit(v, relaxer, new_dist, delta);
 }
 
-void delta_stepping(graph_type &graph, int source, int delta, ygm::comm &world) {
+void delta_stepping(graph_type &graph, int source, int delta, ygm::comm &world, int sum_weights) {
   relax(source, 0, delta, graph, world);
   int current_bucket_index = 0;
-  while (current_bucket_index < (42/3)) {
+  while (current_bucket_index < (sum_weights/delta)) {
     std::set<int> light_relax;
     world.barrier();
     while (true) {
@@ -192,17 +186,13 @@ int main(int argc, char **argv) {
   sum_weights = world.all_reduce_sum(sum_weights);
   world.barrier();
   
-  intialize_vertex_info(graph, sum_weights, delta);
-  world.barrier();
-  
   int bucket_index = ((sum_weights / delta) + 1) - 1;
-  for (int v = 0; v < num_vertices; v++) {
-    add_src_to_bucket(graph, v, bucket_index);
-  }
+  intialize_vertex_info(graph, sum_weights, delta, bucket_index);
+  
   world.barrier();
   double start_time = MPI_Wtime();
   
-  delta_stepping(graph, 0, delta, world);  // Run from source vertex 0
+  delta_stepping(graph, 0, delta, world, sum_weights);  // Run from source vertex 0
   
   world.barrier();
   double end_time = MPI_Wtime();
