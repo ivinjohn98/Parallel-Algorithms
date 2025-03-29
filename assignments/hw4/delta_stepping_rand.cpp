@@ -5,7 +5,6 @@
 #include <vector>
 #include <random>
 #include <unordered_set>
-#include <boost/functional/hash.hpp>
 
 // Struct to store vertex information
 struct vert_info {
@@ -135,52 +134,48 @@ void delta_stepping(graph_type &graph, int source, int delta, ygm::comm &world) 
 }
 
 int generate_connected_random_graph(graph_type &graph, int num_vertices, int num_edges, int max_weight, int delta, ygm::comm &world) {
-  std::random_device rd;
-  std::mt19937 gen(rd());
-  std::uniform_int_distribution<int> vertex_dist(0, num_vertices - 1);
-  std::uniform_int_distribution<int> weight_dist(1, max_weight);
-  std::unordered_set<std::pair<int, int>, boost::hash<std::pair<int, int>>> edge_set;
-  std::vector<int> vertices(num_vertices);
-  int sum_weights = 0;
-  
-  // Create an initial spanning tree (Ensuring connectivity)
-  std::vector<int> shuffled_vertices(num_vertices);
-  for (int i = 0; i < num_vertices; i++) shuffled_vertices[i] = i;
-  std::shuffle(shuffled_vertices.begin(), shuffled_vertices.end(), gen);
-  
-  for (int i = 1; i < num_vertices; i++) {
-    int u = shuffled_vertices[i - 1];
-    int v = shuffled_vertices[i];
-    int weight = weight_dist(gen);
-    edge_set.insert({u, v});
-    sum_weights += weight;
-    add_edge(graph, u, v, weight, delta);
-  }
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<int> vertex_dist(0, num_vertices - 1);
+    std::uniform_int_distribution<int> weight_dist(1, max_weight);
+    
+    std::vector<std::pair<int, int>> edges;
+    int sum_weights = 0;
 
-  // Add remaining edges randomly
-  while (edge_set.size() < num_edges) {
-    int u = vertex_dist(gen);
-    int v = vertex_dist(gen);
-    if (u != v && edge_set.find({u, v}) == edge_set.end() && edge_set.find({v, u}) == edge_set.end()) {
-      int weight = weight_dist(gen);
-      edge_set.insert({u, v});
-      sum_weights += weight;
-      add_edge(graph, u, v, weight, delta);
+    // Create an initial spanning tree (Ensuring connectivity)
+    std::vector<int> shuffled_vertices(num_vertices);
+    for (int i = 0; i < num_vertices; i++) shuffled_vertices[i] = i;
+    std::shuffle(shuffled_vertices.begin(), shuffled_vertices.end(), gen);
+
+    for (int i = 1; i < num_vertices; i++) {
+        int u = shuffled_vertices[i - 1];
+        int v = shuffled_vertices[i];
+        int weight = weight_dist(gen);
+        edges.push_back({u, v});
+        sum_weights += weight;
+        add_edge(graph, u, v, weight, delta);
     }
-  }
-  
-  // Compute bucket parameter
-  int bucket_index = ((sum_weights / delta) + 1) - 1;
-  for (int v = 0; v < num_vertices; v++) {
-    add_src_to_bucket(graph, v, bucket_index);
-  }
-  return sum_weights;
+
+    // Add remaining edges randomly (avoid duplicates with a simple check)
+    while (edges.size() < num_edges) {
+        int u = vertex_dist(gen);
+        int v = vertex_dist(gen);
+        if (u != v && 
+          std::find(edges.begin(), edges.end(), std::make_pair(u, v)) == edges.end() &&
+          std::find(edges.begin(), edges.end(), std::make_pair(v, u)) == edges.end()) 
+        {
+            int weight = weight_dist(gen);
+            edges.push_back({u, v});  // Now it's safe to add
+            sum_weights += weight;
+            add_edge(graph, u, v, weight, delta);
+        }
+    }
+    return sum_weights;
 }
 
 int main(int argc, char **argv) {
 
   ygm::comm world(&argc, &argv);
-  world.welcome();
 
   int num_vertices = std::stoi(argv[1]);
   int num_edges = std::stoi(argv[2]);
@@ -192,14 +187,21 @@ int main(int argc, char **argv) {
   if (world.rank0()) {
     sum_weights = generate_connected_random_graph(graph, num_vertices, num_edges, max_weight, delta, world);
   }
-  world.cout("There is no problem here :)");
   
+  world.barrier();
   sum_weights = world.all_reduce_sum(sum_weights);
   world.barrier();
+  
   intialize_vertex_info(graph, sum_weights, delta);
   world.barrier();
   
-  //delta_stepping(graph, 0, delta, world);  // Run from source vertex 0
+  int bucket_index = ((sum_weights / delta) + 1) - 1;
+  for (int v = 0; v < num_vertices; v++) {
+    add_src_to_bucket(graph, v, bucket_index);
+  }
+  world.barrier();
+  
+  delta_stepping(graph, 0, delta, world);  // Run from source vertex 0
   
   world.barrier();
   
@@ -210,4 +212,3 @@ int main(int argc, char **argv) {
 
   return 0;
 }
-
