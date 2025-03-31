@@ -45,9 +45,10 @@ The following figure shows the algorithm's results for different values of delta
 ![Delta-Stepping plot](delta_stepping.png)
 
 To test the algorithm, please run the following command:
+
 ```bash
 mpirun -np $(processor_count) delta_step_sssp $(number_of_vertices) $(number_of_edges) $(maximum_edge_weight) $(delta_value)
-
+```
 
 # Weak Scaling Experiments and discussion
 
@@ -61,8 +62,6 @@ mpirun -np $(processor_count) delta_step_sssp $(number_of_vertices) $(number_of_
 | 32           | 1,000      | 8,000    | 1,000           | 200         | 16              | 1.54407         |
 
 ![Weak Scaling Delta-Stepping plot](weak_scaling.png)
-
-Discussion:
 
 In weak scaling, we cannot expect a perfectly flat runtime because the Delta-Stepping algorithm is not \(O(N/P)\). There is an additional factor contributed by the Dijkstra part of the algorithm, where heavy edges are relaxed. Since this part of the computation cannot benefit much from parallel computing, the complexity of the algorithm increases. The expected time of the algorithm is claimed to be \(O(\log^3 n / \log (\log n))\)-time in expectation. This clearly highlights why we have an increasing function in weak scaling.  
 
