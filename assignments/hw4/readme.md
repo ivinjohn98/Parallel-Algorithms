@@ -54,6 +54,14 @@ mpirun bfs_example
 
 ![Weak Scaling Delta-Stepping plot](weak_scaling.png)
 
+Discussion:
+
+In weak scaling, we cannot expect a perfectly flat runtime because the Delta-Stepping algorithm is not \(O(N/P)\). There is an additional factor contributed by the Dijkstra part of the algorithm, where heavy edges are relaxed. Since this part of the computation cannot benefit much from parallel computing, the complexity of the algorithm increases. The expected time of the algorithm is claimed to be \(O(\log^3 n / \log (\log n))\)-time in expectation. This clearly highlights why we have an increasing function in weak scaling.  
+
+Additionally, this experiment was conducted on two nodes with 48 processors, meaning that some communication overhead was present. While the overhead between two nodes is not extremely significant, it still contributes to the observed increase in runtime. If more nodes were involved, this effect would be much more pronounced, as inter-node communication incurs higher latency and lower bandwidth compared to intra-node communication.
+
+In an ideal weak scaling scenario, runtime should remain constant as the problem size grows proportionally with the number of processors. However, due to the sequential nature of heavy edge processing and communication overhead, the runtime increases instead. This aligns with the theoretical complexity of the algorithm and the expected scaling behavior.
+
 # Strong Scaling Experiments and discussion
 
 | # Processors | # Vertices | # Edges  | Max Edge Weight | Delta (200) | Average Degree  | Time (Measured) |
@@ -67,6 +75,11 @@ mpirun bfs_example
 
 ![Strong Scaling Delta-Stepping plot](strong_scaling.png)
 
+In strong scaling, I initially expected the algorithm to show better parallel performance than what was observed in the experiments. However, the results are not very surprising. Similar to the weak scaling experiment, the O(log^3 n / log (log n)) expected time has some effect on this increase in time complexity, particularly due to the handling of heavy edges.
+
+The observaiont comes from the sequential component of Delta-Stepping the Dijkstra like relaxation of heavy edges. Since these operations cannot be effectively parallelized, they hinder the algorithm’s capability to achieve better strong scaling. This is evident in the results, where performance does not improve as much as expected when increasing the number of processors.
+
+Additionally, I chose a delta value of 200 and a maximum edge weight of 1,000, as this provides a reasonable trade-off between Dijkstra’s sequential computations and Bellman-Ford’s more parallelizable computations. Increasing delta further (e.g., from 200 to 1000) effectively removes heavy edges, making the algorithm behave more like a pure Bellman-Ford implementation. This led to improved strong scaling results, confirming that the Dijkstra-like sequential component is a key factor in the observed performance limitations.
 
 # Average degree sensitivity experiments and discussion
 
@@ -93,6 +106,10 @@ mpirun bfs_example
 
 ![Average Degree vs Time Delta-Stepping plot](degree_experiment.png)
 
+With an increase in the average degree of the vertices, we observe a linear increase in the expected time. This is expected and can be explained by the fact that as the average degree increases, the graph moves towards a more complete graph, meaning that there are more edges to process during the algorithm’s execution. In Delta-Stepping, the additional edges increase the number of relaxations required, leading to more work for each vertex. This in turn results in a higher computational cost. As the graph becomes denser, the sequential steps (such as Dijkstra-like processing for heavy edges) also become more prominent, further contributing to the increase in expected time. Consequently, the increase in the average degree directly impacts the algorithm's performance, causing the expected time to grow linearly with the degree.
+
+Graph structure and sparsity, the use of 2 nodes causing communication overhead, edge weight distribution, and the barriers introduced by YGM in the algorithm's implementation can all have a minor impact on these results.
+
 # Maximum edge weight experiments and discussion
 
 | # Processors | # Vertices | # Edges  | Max Edge Weight | Delta (200) | Average Degree | Time (Measured) |
@@ -110,3 +127,7 @@ mpirun bfs_example
 | 16           | 1,000      | 8,000    | 3100            | 100         | 16             | 6.06727         |
 
 ![Maximum edge weight vs Time Delta-Stepping plot](max_edge_weight_experiment.png)
+
+With an increase in the maximum edge weight, we observe a linear increase in the expected time. Since we have a fixed delta value, the increase in the maximum edge weight causes the algorithm to process more heavy edges. This is because only a fraction of the edges, specifically \(\frac{\delta}{\text{max edge weight}}\), will be classified as light edges in the graph. As the maximum edge weight increases, fewer edges qualify as light edges, and more edges are considered heavy edges, which requires the algorithm to perform more sequential Dijkstra like computations for those edges. This shift makes the algorithm behave more like Dijkstra’s algorithm, which is known to be less efficient in parallel due to its sequential nature. Thus, the observed increase in expected time is expected, as the algorithm moves away from a more parallel approach and becomes dominated by the sequential heavy edge processing.
+
+Graph structure and sparsity, the use of 2 nodes causing communication overhead, edge weight distribution, and the barriers introduced by YGM in the algorithm's implementation can all have a minor impact on these results.
