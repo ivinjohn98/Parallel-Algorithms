@@ -50,6 +50,8 @@ To test the algorithm, please run the following command:
 mpirun -np $(processor_count) delta_step_sssp $(number_of_vertices) $(number_of_edges) $(maximum_edge_weight) $(delta_value)
 ```
 
+**delta_step_sssp.cpp** is the final Algorithm! "I also have a hardcoded example in the algorithm, if you'd like to test it.
+
 # Weak Scaling Experiments and discussion
 
 | # Processors | # Vertices | # Edges  | Max Edge Weight | Delta (200) | Average Degree  | Time (Measured) |
