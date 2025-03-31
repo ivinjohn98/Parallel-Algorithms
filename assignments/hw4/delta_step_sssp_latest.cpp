@@ -27,6 +27,7 @@ using graph_type = ygm::container::map<int, vert_info>;
 static std::vector<std::set<int>> local_buckets;
 
 static std::set<int> light_relax;
+
 static std::vector<int> local_bucket_neighbor;
 static std::vector<int> local_bucket_neighbor_weight;
 static std::vector<int> local_bucket_v;
