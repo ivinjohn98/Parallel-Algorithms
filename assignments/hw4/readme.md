@@ -38,10 +38,18 @@ mpirun bfs_example
 ## Student Report
 *  Append your report here...
 
+# Implementation of Delta Stepping SSSP
+
+The following figure shows the algorithm's results for different values of delta. I used delta = 1 and delta > maximum edge weight in this case. In the former case, the algorithm performs like Dijkstra's algorithm, and in the latter case, it behaves like Bellman-Ford. As expected, the results are the same. This is highlighted in the figure below.
+
+![Delta-Stepping plot](delta_stepping.png)
+
+To test the algorithm, please run the following command:
+```bash
+mpirun -np $(processor_count) delta_step_sssp $(number_of_vertices) $(number_of_edges) $(maximum_edge_weight) $(delta_value)
+
 
 # Weak Scaling Experiments and discussion
-
-2 nodes 48 cores.
 
 | # Processors | # Vertices | # Edges  | Max Edge Weight | Delta (200) | Average Degree  | Time (Measured) |
 |--------------|------------|----------|-----------------|-------------|-----------------|-----------------|
