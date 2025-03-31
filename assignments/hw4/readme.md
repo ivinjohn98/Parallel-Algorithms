@@ -109,4 +109,4 @@ mpirun bfs_example
 | 16           | 1,000      | 8,000    | 2800            | 100         | 16             | 5.55718         |
 | 16           | 1,000      | 8,000    | 3100            | 100         | 16             | 6.06727         |
 
-![Maximum edge weight vs Time Delta-Stepping plot](max_weight_experiment.png)
+![Maximum edge weight vs Time Delta-Stepping plot](max_edge_weight_experiment.png)
