@@ -37,3 +37,49 @@ mpirun bfs_example
 
 ## Student Report
 *  Append your report here...
+
+
+# Weak Scaling Experiments and discussion
+
+| # Processors | # Vertices | # Edges  | Max Edge Weight | Delta (200) | Average Degree | Time (Measured) |
+|--------------|------------|----------|-----------------|-------------|-----------------|-----------------|
+| 1            | 31         | 248      | 1,000           | 200         | 16              | TBD             |
+| 2            | 62         | 496      | 1,000           | 200         | 16              | TBD             |
+| 4            | 125        | 1,000    | 1,000           | 200         | 16              | TBD             |
+| 8            | 250        | 2,000    | 1,000           | 200         | 16              | TBD             |
+| 16           | 500        | 4,000    | 1,000           | 200         | 16              | TBD             |
+| 32           | 1,000      | 8,000    | 1,000           | 200         | 16              | TBD             |
+
+# Strong Scaling Experiments and discussion
+
+| # Processors | # Vertices | # Edges  | Max Edge Weight | Delta (200) | Average Degree | Time (Measured) |
+|--------------|------------|----------|-----------------|-------------|-----------------|-----------------|
+| 1            | 1,000      | 8,000    | 1,000           | 200         | 16              | TBD             |
+| 2            | 1,000      | 8,000    | 1,000           | 200         | 16              | TBD             |
+| 4            | 1,000      | 8,000    | 1,000           | 200         | 16              | TBD             |
+| 8            | 1,000      | 8,000    | 1,000           | 200         | 16              | TBD             |
+| 16           | 1,000      | 8,000    | 1,000           | 200         | 16              | TBD             |
+| 32           | 1,000      | 8,000    | 1,000           | 200         | 16              | TBD             |
+
+
+# Average degree sensitivity experiments and discussion
+
+| # Processors | # Vertices | # Edges | Max Edge Weight | Delta (200) | Average Degree | Time (Measured) |
+|--------------|------------|---------|-----------------|-------------|----------------|-----------------|
+| 16           | 1,000      | 2,000   | 1,000           | 200         | 4              | TBD             |
+| 16           | 1,000      | 4,000   | 1,000           | 200         | 8              | TBD             |
+| 16           | 1,000      | 8,000   | 1,000           | 200         | 16             | TBD             |
+| 16           | 1,000      | 16,000  | 1,000           | 200         | 32             | TBD             |
+| 16           | 1,000      | 32,000  | 1,000           | 200         | 64             | TBD             |
+
+
+# Maximum edge weight experiments and discussion
+
+| # Processors | # Vertices | # Edges  | Max Edge Weight | Delta (200) | Average Degree | Time (Measured) |
+|--------------|------------|----------|-----------------|-------------|----------------|-----------------|
+| 16           | 1,000      | 8,000    | 100             | 200         | 16             | TBD             |
+| 16           | 1,000      | 8,000    | 200             | 200         | 16             | TBD             |
+| 16           | 1,000      | 8,000    | 500             | 200         | 16             | TBD             |
+| 16           | 1,000      | 8,000    | 1,000           | 200         | 16             | TBD             |
+| 16           | 1,000      | 8,000    | 2,000           | 200         | 16             | TBD             |
+| 16           | 1,000      | 8,000    | 5,000           | 200         | 16             | TBD             |
