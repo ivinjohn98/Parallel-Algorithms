@@ -43,7 +43,7 @@ mpirun bfs_example
 
 2 nodes 48 cores.
 
-| # Processors | # Vertices | # Edges  | Max Edge Weight | Delta (200) | Average Degree | Time (Measured) |
+| # Processors | # Vertices | # Edges  | Max Edge Weight | Delta (200) | Average Degree  | Time (Measured) |
 |--------------|------------|----------|-----------------|-------------|-----------------|-----------------|
 | 1            | 31         | 248      | 1,000           | 200         | 16              | 0.00559459      |
 | 2            | 62         | 496      | 1,000           | 200         | 16              | 0.0238602       |
@@ -52,17 +52,20 @@ mpirun bfs_example
 | 16           | 500        | 4,000    | 1,000           | 200         | 16              | 0.514986        |
 | 32           | 1,000      | 8,000    | 1,000           | 200         | 16              | 1.54407         |
 
+![Weak Scaling Delta-Stepping plot](weak_scaling.png)
 
 # Strong Scaling Experiments and discussion
 
-| # Processors | # Vertices | # Edges  | Max Edge Weight | Delta (200) | Average Degree | Time (Measured) |
+| # Processors | # Vertices | # Edges  | Max Edge Weight | Delta (200) | Average Degree  | Time (Measured) |
 |--------------|------------|----------|-----------------|-------------|-----------------|-----------------|
 | 1            | 1,000      | 8,000    | 1,000           | 200         | 16              | 0.0870622       |
-| 2            | 1,000      | 8,000    | 1,000           | 200         | 16              | 0.28799        |
+| 2            | 1,000      | 8,000    | 1,000           | 200         | 16              | 0.28799         |
 | 4            | 1,000      | 8,000    | 1,000           | 200         | 16              | 0.480869        |
 | 8            | 1,000      | 8,000    | 1,000           | 200         | 16              | 0.68234         |
 | 16           | 1,000      | 8,000    | 1,000           | 200         | 16              | 0.990479        |
 | 32           | 1,000      | 8,000    | 1,000           | 200         | 16              | 1.5392          |
+
+![Strong Scaling Delta-Stepping plot](strong_scaling.png)
 
 
 # Average degree sensitivity experiments and discussion
@@ -88,7 +91,7 @@ mpirun bfs_example
 | 16           | 100        | 4900    | 1,000           | 200         | 49             | 0.610889        |
 | 16           | 100        | 4950    | 1,000           | 200         | 49.5(complete) | 0.610755        |
 
-
+![Average Degree vs Time Delta-Stepping plot](degree_experiment.png)
 
 # Maximum edge weight experiments and discussion
 
@@ -105,3 +108,5 @@ mpirun bfs_example
 | 16           | 1,000      | 8,000    | 2500            | 100         | 16             | 4.87797         |
 | 16           | 1,000      | 8,000    | 2800            | 100         | 16             | 5.55718         |
 | 16           | 1,000      | 8,000    | 3100            | 100         | 16             | 6.06727         |
+
+![Maximum edge weight vs Time Delta-Stepping plot](max_weight_experiment.png)
