@@ -51,17 +51,6 @@ void print_graph(graph_type &graph, ygm::comm &world) {
   });
 }
 
-// Function to add an edge to the graph
-void add_edge(graph_type &graph, int src, int dest, int weight) {
-  auto inserter = [](int src, vert_info &vi, int dest, int weight) {
-    vi.edges.push_back(dest);
-    vi.edge_weights.push_back(weight);
-  };
-  
-  graph.async_visit(src, inserter, dest, weight);
-  graph.async_visit(dest, inserter, src, weight);
-}
-
 void add_edge_with_random_value(graph_type &graph, int src, int dest, int weight, double src_random_value, double dest_random_value) {
   auto inserter = [](int src, vert_info &vi, int dest, int weight, double random_value_src, double random_value_dest) {
     if (vi.random_value == -1.0) {
@@ -95,27 +84,7 @@ void remove_edge(graph_type &graph, int src, int dest) {
   };
   
   graph.async_visit(src, deleter, dest);
-  graph.async_visit(dest, deleter, src);
-}
-
-void assign_random_values(graph_type &graph, ygm::comm &world) {
-  graph.for_all([](const int key, vert_info &vi) {
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<double> prob_dist(0.0, 1.0);
-    vi.random_value = prob_dist(gen);
-  });
-}
-
-void propagate_random_values(graph_type &graph) {
-  graph.for_all([&graph](const int key, vert_info &vi) {
-    for (auto neighbor : vi.edges) {
-      double my_rand = vi.random_value;
-      graph.async_visit(neighbor, [my_rand](int, vert_info &u_vi) {
-        u_vi.neighbor_random_values.push_back(my_rand);
-      });
-    }
-  });
+  //graph.async_visit(dest, deleter, src);
 }
 
 std::vector<int> mis_luby(graph_type &graph, ygm::comm &world) {
@@ -160,12 +129,11 @@ std::vector<int> mis_luby(graph_type &graph, ygm::comm &world) {
     
     world.barrier();
 
-    // Remove edges to removed vertices
+    // Remove edges
     for (int i=0; i<src_vertices.size(); i++) {
-      //std::cout<< "about to remove src: " << src_vertices[i] << ", dest: " << dest_vertices[i] << std::endl;
       //optimiaztion can be done for the below code - just one direction enough for the remove edge function.
-      //remove_edge(graph, dest_vertices[i], src_vertices[i]);
-      remove_edge(graph, src_vertices[i], dest_vertices[i]);
+      remove_edge(graph, dest_vertices[i], src_vertices[i]);
+      //remove_edge(graph, src_vertices[i], dest_vertices[i]);
     }
     
     local_removed.clear();
@@ -190,7 +158,7 @@ std::vector<int> mis_luby(graph_type &graph, ygm::comm &world) {
 }
 
 
-int generate_connected_random_graph(graph_type &graph, int num_vertices, int num_edges, int max_weight, ygm::comm &world) {
+int generate_connected_random_graph(graph_type &graph, int num_vertices, int num_edges, int max_weight, ygm::comm &world, std::unordered_map<int, double>& vertex_to_random_value_map) {
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<int> vertex_dist(0, num_vertices - 1);
@@ -210,7 +178,7 @@ int generate_connected_random_graph(graph_type &graph, int num_vertices, int num
         int weight = weight_dist(gen);
         edges.push_back({u, v});
         sum_weights += weight;
-        add_edge(graph, u, v, weight);
+        add_edge_with_random_value(graph, u, v, weight, vertex_to_random_value_map[u], vertex_to_random_value_map[v]);
     }
 
     // Add remaining edges randomly (avoid duplicates with a simple check)
@@ -224,7 +192,7 @@ int generate_connected_random_graph(graph_type &graph, int num_vertices, int num
             int weight = weight_dist(gen);
             edges.push_back({u, v});  // Now it's safe to add
             sum_weights += weight;
-            add_edge(graph, u, v, weight);
+            add_edge_with_random_value(graph, u, v, weight, vertex_to_random_value_map[u], vertex_to_random_value_map[v]);
         }
     }
     return sum_weights;
@@ -248,14 +216,7 @@ int main(int argc, char **argv) {
       vertex_to_random_value_map[i] = prob_dist(gen);
     }
     // Just add edges
-    add_edge_with_random_value(graph, 0, 1, 4, vertex_to_random_value_map[0], vertex_to_random_value_map[1]);
-    add_edge_with_random_value(graph, 0, 3, 8, vertex_to_random_value_map[0], vertex_to_random_value_map[3]);
-    add_edge_with_random_value(graph, 1, 3, 11, vertex_to_random_value_map[1], vertex_to_random_value_map[3]);
-    add_edge_with_random_value(graph, 1, 2, 3, vertex_to_random_value_map[1], vertex_to_random_value_map[2]);
-    add_edge_with_random_value(graph, 2, 4, 2, vertex_to_random_value_map[2], vertex_to_random_value_map[4]);
-    add_edge_with_random_value(graph, 3, 4, 7, vertex_to_random_value_map[3], vertex_to_random_value_map[4]);
-    add_edge_with_random_value(graph, 4, 5, 6, vertex_to_random_value_map[4], vertex_to_random_value_map[5]);
-    add_edge_with_random_value(graph, 3, 5, 1, vertex_to_random_value_map[3], vertex_to_random_value_map[5]);
+    generate_connected_random_graph(graph, num_vertices, num_edges, max_weight, world, vertex_to_random_value_map);
   }
   
   world.barrier();
@@ -276,4 +237,3 @@ int main(int argc, char **argv) {
 
   return 0;
 }
-
