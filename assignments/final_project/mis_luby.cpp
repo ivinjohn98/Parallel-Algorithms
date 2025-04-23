@@ -40,6 +40,22 @@ std::string vec_to_string(const std::vector<T> &vec) {
 
 void print_graph(graph_type &graph, ygm::comm &world) {
   graph.for_all([&world](int src, vert_info &vi) {
+    std::stringstream ss;
+    ss << "Vertex " << src << "\n";
+    ss << "  is_removed: " << vi.is_removed << "\n";
+    ss << "  is_belong_to_mis: " << vi.is_belong_to_mis << "\n";
+    ss << "  random_value: " << vi.random_value << "\n";
+    ss << "  edges: " << vec_to_string(vi.edges) << "\n";
+    ss << "  neighbor_random_values: " << vec_to_string(vi.neighbor_random_values) << "\n";
+    ss << "  edge_weights: " << vec_to_string(vi.edge_weights) << "\n";
+    ss << "===========";
+
+    world.cout(ss.str());
+  });
+}
+
+/*void print_graph(graph_type &graph, ygm::comm &world) {
+  graph.for_all([&world](int src, vert_info &vi) {
     world.cout("Vertex ", src);
     world.cout("  is_removed: ", vi.is_removed);
     world.cout("  is_belong_to_mis: ", vi.is_belong_to_mis);
@@ -49,7 +65,8 @@ void print_graph(graph_type &graph, ygm::comm &world) {
     world.cout("  edge_weights: ", vec_to_string(vi.edge_weights));
     world.cout("===========");
   });
-}
+  world.barrier();
+}*/
 
 void add_vertex_to_graph(graph_type &graph, int src, double random_value) {
   auto vertex_inserter = [](int src, vert_info &vi, double random_value) {
@@ -67,6 +84,26 @@ void add_edge_with_random_value(graph_type &graph, int src, int dest, int weight
 
   graph.async_visit(src, edge_inserter, dest, weight, src_random_value, dest_random_value);
   graph.async_visit(dest, edge_inserter, src, weight, dest_random_value, src_random_value);
+}
+
+void modify_vertex_random_value(graph_type &graph, int src, double src_random_value) {
+  auto vertex_random_value_modifier = [](int src, vert_info &vi, double random_value_src) {
+    vi.random_value = random_value_src;
+  };
+
+  graph.async_visit(src, vertex_random_value_modifier, src_random_value);
+}
+
+void modify_edge_random_value(graph_type &graph, int src, int dest, double src_random_value) {
+  auto edge_random_value_modifier = [](int dest, vert_info &vi, int src, double random_value_src) {
+    for (int i=0; i < vi.edges.size(); i++) {
+      if (vi.edges[i] == src) {
+        vi.neighbor_random_values[i] = random_value_src;
+      }
+    }
+  };
+
+  graph.async_visit(dest, edge_random_value_modifier, src, src_random_value);
 }
 
 
@@ -97,8 +134,31 @@ std::vector<int> mis_luby(graph_type &graph, ygm::comm &world) {
   static std::vector<int> local_removed;
   static std::vector<int> src_vertices;
   static std::vector<int> dest_vertices;
+  
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_real_distribution<double> prob_dist(0.0, 1.0);
 
   while (has_active) {
+    // Phase 0: Randomize pick for vertex!   
+    graph.for_all([&](int v, vert_info &vi) {
+      for (int i=0; i < vi.edges.size(); i++) {
+        double src_random_value = prob_dist(gen);
+        modify_vertex_random_value(graph, v, src_random_value);
+      }
+    });
+    
+    world.barrier();
+    
+    // Phase 0: Propagate random values across edges!
+    graph.for_all([&](int v, vert_info &vi) {
+      for (int i=0; i < vi.edges.size(); i++) {
+        modify_edge_random_value(graph, v, vi.edges[i], vi.random_value);
+      }
+    });
+    
+    world.barrier();
+    
     // Phase 1: Select MIS candidates
     graph.for_all([&](int v, vert_info &vi) {
       if (!vi.is_removed) {
@@ -117,7 +177,10 @@ std::vector<int> mis_luby(graph_type &graph, ygm::comm &world) {
         }
       }
     });
+
     world.barrier();
+    
+    //return local_mis;
     
     // Phase 2: Mark removed vertices and clean neighbor lists
     for (auto neighbor : local_removed) {
@@ -139,6 +202,8 @@ std::vector<int> mis_luby(graph_type &graph, ygm::comm &world) {
       remove_edge(graph, dest_vertices[i], src_vertices[i]);
       //remove_edge(graph, src_vertices[i], dest_vertices[i]);
     }
+    
+    world.barrier();
     
     local_removed.clear();
     src_vertices.clear();
@@ -246,6 +311,7 @@ int main(int argc, char **argv) {
       // Intialize vertices
       add_vertex_to_graph(graph, i, vertex_to_random_value_map[i]);
     }
+    
     // Just add edges
     //generate_connected_random_graph(graph, num_vertices, num_edges, max_weight, world, vertex_to_random_value_map);
     generate_random_graph(graph, num_vertices, num_edges, max_weight, world, vertex_to_random_value_map);
@@ -253,8 +319,8 @@ int main(int argc, char **argv) {
   
   world.barrier();
   
-  print_graph(graph, world);
-  world.barrier();
+  //print_graph(graph, world);
+  //world.barrier();
   
   double start_time = MPI_Wtime();
   std::vector<int> local_solution = mis_luby(graph, world);
@@ -263,9 +329,12 @@ int main(int argc, char **argv) {
   
   world.barrier();
 
-  for (int v : local_solution) {
-    world.cout("MIS vertex: ", v);
+  if (world.rank0()) {
+    std::cout << "time elapsed: " << end_time - start_time << std::endl;
   }
+  /*for (int v : local_solution) {
+    world.cout("MIS vertex: ", v);
+  }*/
 
   return 0;
 }
