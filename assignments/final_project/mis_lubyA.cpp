@@ -86,14 +86,6 @@ void add_edge_with_random_value(graph_type &graph, int src, int dest, int weight
   graph.async_visit(dest, edge_inserter, src, weight, dest_random_value, src_random_value);
 }
 
-void modify_vertex_random_value(graph_type &graph, int src, double src_random_value) {
-  auto vertex_random_value_modifier = [](int src, vert_info &vi, double random_value_src) {
-    vi.random_value = random_value_src;
-  };
-
-  graph.async_visit(src, vertex_random_value_modifier, src_random_value);
-}
-
 void modify_edge_random_value(graph_type &graph, int src, int dest, double src_random_value) {
   auto edge_random_value_modifier = [](int dest, vert_info &vi, int src, double random_value_src) {
     for (int i=0; i < vi.edges.size(); i++) {
@@ -143,8 +135,7 @@ std::vector<int> mis_luby(graph_type &graph, ygm::comm &world) {
     // Phase 0: Randomize pick for vertex!   
     graph.for_all([&](int v, vert_info &vi) {
       for (int i=0; i < vi.edges.size(); i++) {
-        double src_random_value = prob_dist(gen);
-        modify_vertex_random_value(graph, v, src_random_value);
+        vi.random_value = prob_dist(gen);
       }
     });
     
