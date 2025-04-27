@@ -129,6 +129,8 @@ std::vector<int> mis_luby(graph_type &graph, ygm::comm &world) {
   std::random_device rd;
   std::mt19937 gen(rd());
   std::bernoulli_distribution coin_flip(0.5);
+  
+  int loop_count = 0;
 
   while (has_active) {
 
@@ -227,9 +229,15 @@ std::vector<int> mis_luby(graph_type &graph, ygm::comm &world) {
     
     // Reduce to get global activity status
     has_active = world.all_reduce(local_active, std::logical_or<bool>());
+    
+    loop_count++;
   }
   
   world.barrier();
+  
+  if (world.rank0()) {
+    std::cout << "loop count: " << loop_count << std::endl;
+  }
 
   return local_mis;
 }
@@ -303,7 +311,7 @@ int main(int argc, char **argv) {
     }
     
     // Just add edges
-    //generate_connected_random_graph(graph, num_vertices, num_edges, max_weight, world, vertex_to_random_value_map);
+    //generate_connected_random_graph(graph, num_vertices, num_edges, world);
     generate_random_graph(graph, num_vertices, num_edges, world);
   }
   
