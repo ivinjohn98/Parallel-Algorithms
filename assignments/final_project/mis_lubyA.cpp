@@ -12,7 +12,7 @@
 struct vert_info {
   template <typename Archive>
   void serialize(Archive & ar) {
-    ar(edges, is_removed, is_belong_to_mis, random_value, neighbor_random_values, edge_weights);
+    ar(edges, is_removed, is_belong_to_mis, random_value, neighbor_random_values);
   }
 
   std::vector<int> edges;
@@ -20,7 +20,6 @@ struct vert_info {
   bool is_belong_to_mis = false;
   double random_value = -1.0;
   std::vector<double> neighbor_random_values;
-  std::vector<int> edge_weights;
   
 };
 
@@ -47,26 +46,11 @@ void print_graph(graph_type &graph, ygm::comm &world) {
     ss << "  random_value: " << vi.random_value << "\n";
     ss << "  edges: " << vec_to_string(vi.edges) << "\n";
     ss << "  neighbor_random_values: " << vec_to_string(vi.neighbor_random_values) << "\n";
-    ss << "  edge_weights: " << vec_to_string(vi.edge_weights) << "\n";
     ss << "===========";
 
     world.cout(ss.str());
   });
 }
-
-/*void print_graph(graph_type &graph, ygm::comm &world) {
-  graph.for_all([&world](int src, vert_info &vi) {
-    world.cout("Vertex ", src);
-    world.cout("  is_removed: ", vi.is_removed);
-    world.cout("  is_belong_to_mis: ", vi.is_belong_to_mis);
-    world.cout("  random_value: ", vi.random_value);
-    world.cout("  edges: ", vec_to_string(vi.edges));
-    world.cout("  neighbor_random_values: ", vec_to_string(vi.neighbor_random_values));
-    world.cout("  edge_weights: ", vec_to_string(vi.edge_weights));
-    world.cout("===========");
-  });
-  world.barrier();
-}*/
 
 void add_vertex_to_graph(graph_type &graph, int src, double random_value) {
   auto vertex_inserter = [](int src, vert_info &vi, double random_value) {
@@ -75,15 +59,14 @@ void add_vertex_to_graph(graph_type &graph, int src, double random_value) {
   graph.async_visit(src, vertex_inserter, random_value);
 }
 
-void add_edge_with_random_value(graph_type &graph, int src, int dest, int weight, double src_random_value, double dest_random_value) {
-  auto edge_inserter = [](int src, vert_info &vi, int dest, int weight, double random_value_src, double random_value_dest) {
+void add_edge_with_random_value(graph_type &graph, int src, int dest, double src_random_value, double dest_random_value) {
+  auto edge_inserter = [](int src, vert_info &vi, int dest, double random_value_src, double random_value_dest) {
     vi.edges.push_back(dest);
     vi.neighbor_random_values.push_back(random_value_dest);
-    vi.edge_weights.push_back(weight);
   };
 
-  graph.async_visit(src, edge_inserter, dest, weight, src_random_value, dest_random_value);
-  graph.async_visit(dest, edge_inserter, src, weight, dest_random_value, src_random_value);
+  graph.async_visit(src, edge_inserter, dest, src_random_value, dest_random_value);
+  graph.async_visit(dest, edge_inserter, src, dest_random_value, src_random_value);
 }
 
 void modify_edge_random_value(graph_type &graph, int src, int dest, double src_random_value) {
@@ -126,6 +109,8 @@ std::vector<int> mis_luby(graph_type &graph, ygm::comm &world) {
   static std::vector<int> local_removed;
   static std::vector<int> src_vertices;
   static std::vector<int> dest_vertices;
+  
+  int loop_count = 0;
   
   std::random_device rd;
   std::mt19937 gen(rd());
@@ -210,21 +195,25 @@ std::vector<int> mis_luby(graph_type &graph, ygm::comm &world) {
     
     // Reduce to get global activity status
     has_active = world.all_reduce(local_active, std::logical_or<bool>());
+    
+    loop_count++;
   }
   
   world.barrier();
+  
+  if (world.rank0()) {
+    std::cout << "loop count: " << loop_count << std::endl;
+  }
 
   return local_mis;
 }
 
-int generate_connected_random_graph(graph_type &graph, int num_vertices, int num_edges, int max_weight, ygm::comm &world, std::unordered_map<int, double>& vertex_to_random_value_map) {
+void generate_connected_random_graph(graph_type &graph, int num_vertices, int num_edges, ygm::comm &world, std::unordered_map<int, double>& vertex_to_random_value_map) {
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<int> vertex_dist(0, num_vertices - 1);
-    std::uniform_int_distribution<int> weight_dist(1, max_weight);
     
     std::vector<std::pair<int, int>> edges;
-    int sum_weights = 0;
 
     // Create an initial spanning tree (Ensuring connectivity)
     std::vector<int> shuffled_vertices(num_vertices);
@@ -234,10 +223,8 @@ int generate_connected_random_graph(graph_type &graph, int num_vertices, int num
     for (int i = 1; i < num_vertices; i++) {
         int u = shuffled_vertices[i - 1];
         int v = shuffled_vertices[i];
-        int weight = weight_dist(gen);
         edges.push_back({u, v});
-        sum_weights += weight;
-        add_edge_with_random_value(graph, u, v, weight, vertex_to_random_value_map[u], vertex_to_random_value_map[v]);
+        add_edge_with_random_value(graph, u, v, vertex_to_random_value_map[u], vertex_to_random_value_map[v]);
     }
 
     // Add remaining edges randomly (avoid duplicates with a simple check)
@@ -248,23 +235,18 @@ int generate_connected_random_graph(graph_type &graph, int num_vertices, int num
           std::find(edges.begin(), edges.end(), std::make_pair(u, v)) == edges.end() &&
           std::find(edges.begin(), edges.end(), std::make_pair(v, u)) == edges.end()) 
         {
-            int weight = weight_dist(gen);
             edges.push_back({u, v});  // Now it's safe to add
-            sum_weights += weight;
-            add_edge_with_random_value(graph, u, v, weight, vertex_to_random_value_map[u], vertex_to_random_value_map[v]);
+            add_edge_with_random_value(graph, u, v, vertex_to_random_value_map[u], vertex_to_random_value_map[v]);
         }
     }
-    return sum_weights;
 }
 
-int generate_random_graph(graph_type &graph, int num_vertices, int num_edges, int max_weight, ygm::comm &world, std::unordered_map<int, double>& vertex_to_random_value_map) {
+void generate_random_graph(graph_type &graph, int num_vertices, int num_edges, ygm::comm &world, std::unordered_map<int, double>& vertex_to_random_value_map) {
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<int> vertex_dist(0, num_vertices - 1);
-    std::uniform_int_distribution<int> weight_dist(1, max_weight);
     
     std::vector<std::pair<int, int>> edges;
-    int sum_weights = 0;
 
     // Add remaining edges randomly (avoid duplicates with a simple check)
     while (edges.size() < num_edges) {
@@ -274,13 +256,10 @@ int generate_random_graph(graph_type &graph, int num_vertices, int num_edges, in
           std::find(edges.begin(), edges.end(), std::make_pair(u, v)) == edges.end() &&
           std::find(edges.begin(), edges.end(), std::make_pair(v, u)) == edges.end()) 
         {
-            int weight = weight_dist(gen);
             edges.push_back({u, v});  // Now it's safe to add
-            sum_weights += weight;
-            add_edge_with_random_value(graph, u, v, weight, vertex_to_random_value_map[u], vertex_to_random_value_map[v]);
+            add_edge_with_random_value(graph, u, v, vertex_to_random_value_map[u], vertex_to_random_value_map[v]);
         }
     }
-    return sum_weights;
 }
 
 int main(int argc, char **argv) {
@@ -288,7 +267,6 @@ int main(int argc, char **argv) {
 
   int num_vertices = std::stoi(argv[1]);
   int num_edges = std::stoi(argv[2]);
-  int max_weight = std::stoi(argv[3]);
 
   graph_type graph(world);
 
@@ -304,8 +282,8 @@ int main(int argc, char **argv) {
     }
     
     // Just add edges
-    //generate_connected_random_graph(graph, num_vertices, num_edges, max_weight, world, vertex_to_random_value_map);
-    generate_random_graph(graph, num_vertices, num_edges, max_weight, world, vertex_to_random_value_map);
+    //generate_connected_random_graph(graph, num_vertices, num_edges, world, vertex_to_random_value_map);
+    generate_random_graph(graph, num_vertices, num_edges, world, vertex_to_random_value_map);
   }
   
   world.barrier();
