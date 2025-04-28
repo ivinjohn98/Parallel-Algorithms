@@ -128,7 +128,7 @@ std::vector<int> mis_luby(graph_type &graph, ygm::comm &world) {
   
   std::random_device rd;
   std::mt19937 gen(rd());
-  std::bernoulli_distribution coin_flip(0.5);
+  std::uniform_real_distribution<double> prob_dist(0.0, 1.0);
   
   int loop_count = 0;
 
@@ -143,12 +143,19 @@ std::vector<int> mis_luby(graph_type &graph, ygm::comm &world) {
     
     world.barrier();
 
-    // Phase 0: coin flip for each vertex!
+    // Phase 0: biased coin flip for each vertex!
     graph.for_all([&](int v, vert_info &vi) {
       if (!vi.is_removed) {
-        int coin_value = coin_flip(gen);
-        if (coin_value == 1) {
+        if (vi.edges.size() == 0) {
           vi.is_belong_to_mis = true;
+        } else {
+          double coin_prob = 1.0 / (2 * vi.edges.size());
+          double random_value = prob_dist(gen);
+
+          // If random_value < coin_prob, then the vertex gets added to the MIS
+          if (random_value < coin_prob) {
+            vi.is_belong_to_mis = true;
+          }
         }
       }
     });
@@ -163,7 +170,7 @@ std::vector<int> mis_luby(graph_type &graph, ygm::comm &world) {
     
     world.barrier();
 
-    // Phase 0: if I and my neighbor are true, and neighor has higher degree than me. then I am false
+    // Phase 0: if I and my neighbor are selected, and my neighor has higher degree than me. then I need to remove myself
     // Phase 1: Select MIS candidates
     graph.for_all([&](int v, vert_info &vi) {
       if (!vi.is_removed) {
