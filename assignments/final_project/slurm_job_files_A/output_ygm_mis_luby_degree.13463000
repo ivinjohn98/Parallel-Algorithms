@@ -1,0 +1,13 @@
+loop count: 4
+time elapsed: 0.0113172
+loop count: 4
+time elapsed: 0.0134361
+loop count: 5
+time elapsed: 0.0193441
+loop count: 5
+time elapsed: 0.0327667
+loop count: 5
+time elapsed: 0.0606435
+loop count: 6
+time elapsed: 0.133709
+slurmstepd: error: *** JOB 13463000 ON c714 CANCELLED AT 2025-04-27T17:04:28 DUE TO TIME LIMIT ***
