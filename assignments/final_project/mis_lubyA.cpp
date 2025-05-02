@@ -119,9 +119,7 @@ std::vector<int> mis_luby(graph_type &graph, ygm::comm &world) {
   while (has_active) {
     // Phase 0: Randomize pick for vertex!   
     graph.for_all([&](int v, vert_info &vi) {
-      for (int i=0; i < vi.edges.size(); i++) {
-        vi.random_value = prob_dist(gen);
-      }
+      vi.random_value = prob_dist(gen);
     });
     
     world.barrier();
