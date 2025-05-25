@@ -1,4 +1,4 @@
-# CSCE-626-S25
+# CSCE-626-S25-Parallel Algorithm Design and Analysis
 
 ## Contact Information
 * Roger Pearce:   rpearce@tamu.edu
